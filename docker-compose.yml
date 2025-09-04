@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: opus-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: opus_language
+      POSTGRES_USER: postgres
+      # ВАЖНО: НЕ используем POSTGRES_PASSWORD с trust!
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    network_mode: bridge
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d opus_language"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
