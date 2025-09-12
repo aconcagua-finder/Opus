@@ -104,39 +104,51 @@
 ## Запуск проекта
 
 ### Предварительные требования
-- Node.js 20+
 - Docker Desktop
 - Git
 
-### Установка
+### Быстрый запуск (рекомендуется)
 
 ```bash
 # Клонирование репозитория
 git clone [repo-url]
 cd opus
 
-# Установка зависимостей
+# Запуск полной системы в Docker
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+Приложение будет доступно на http://localhost:3000
+
+### Альтернативные способы запуска
+
+#### 1. Продакшн режим (Docker)
+```bash
+docker-compose up --build
+```
+
+#### 2. Локальная разработка (без Docker для Next.js)
+```bash
+# Запуск только PostgreSQL в Docker
+docker-compose up postgres -d
+
+# Установка зависимостей и запуск Next.js локально
 npm install
-
-# Запуск PostgreSQL в Docker
-docker-compose up -d
-
-# Применение миграций БД
 npx prisma migrate dev
-
-# Запуск dev-сервера
 npm run dev
 ```
 
 ### Переменные окружения
 
-Создайте файл `.env.local`:
+Для локальной разработки создайте файл `.env.local`:
 
 ```env
-DATABASE_URL="postgresql://opus_user:securepassword123@localhost:5432/opus_db"
+DATABASE_URL="postgresql://postgres@localhost:5432/opus_language?schema=public"
 JWT_SECRET="your-secret-key-here"
 NEXT_PUBLIC_API_URL="/api"
 ```
+
+**Примечание**: При использовании Docker переменные окружения настроены автоматически.
 
 ## Реализованный функционал
 
@@ -178,12 +190,37 @@ NEXT_PUBLIC_API_URL="/api"
 
 ## Команды разработки
 
+### Docker команды (рекомендуется)
+```bash
+# Разработка с hot reload
+docker-compose -f docker-compose.dev.yml up --build
+
+# Пересборка после изменений
+docker-compose -f docker-compose.dev.yml up --build --force-recreate
+
+# Остановка контейнеров
+docker-compose -f docker-compose.dev.yml down
+
+# Просмотр логов
+docker-compose -f docker-compose.dev.yml logs -f app
+```
+
+### Локальные команды (если не используешь Docker)
 ```bash
 npm run dev          # Запуск dev-сервера
-npm run build        # Production сборка
+npm run build        # Production сборка  
 npm run start        # Запуск production
 npx prisma studio    # GUI для БД
 npx prisma migrate dev  # Создание миграций
+```
+
+### Полезные Docker команды
+```bash
+# Доступ к контейнеру приложения
+docker exec -it opus-app-dev sh
+
+# Доступ к PostgreSQL
+docker exec -it opus-postgres-dev psql -U postgres -d opus_language
 ```
 
 ## Принципы разработки
@@ -232,6 +269,8 @@ interface BaseStore<T> {
 - ✅ Настройка проекта Next.js 15.5
 - ✅ Подключение PostgreSQL через Docker
 - ✅ Настройка Prisma ORM
+- ✅ **Полная докеризация приложения**
+- ✅ Docker-compose для dev и prod режимов
 - ✅ Модуль авторизации (login/register/logout)
 - ✅ JWT аутентификация
 - ✅ Middleware для защиты роутов

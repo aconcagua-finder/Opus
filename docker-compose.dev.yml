@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15
-    container_name: opus-postgres
+    container_name: opus-postgres-dev
     restart: always
     environment:
       POSTGRES_DB: opus_language
@@ -10,10 +10,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data-dev:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - opus-network
+      - opus-network-dev
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d opus_language"]
       interval: 5s
@@ -23,23 +23,28 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: opus-app
+      dockerfile: Dockerfile.dev
+    container_name: opus-app-dev
     restart: always
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres@postgres:5432/opus_language?schema=public
+      - WATCHPACK_POLLING=true
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - opus-network
+      - opus-network-dev
 
 networks:
-  opus-network:
+  opus-network-dev:
     driver: bridge
 
 volumes:
-  postgres-data:
+  postgres-data-dev:
