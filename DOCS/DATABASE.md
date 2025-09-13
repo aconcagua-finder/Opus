@@ -152,27 +152,86 @@ model AuthAttempt {
 - Аудит безопасности
 - Анализ подозрительной активности
 
+## Модуль: NextAuth.js
+
+### Модель: Account
+Связывание пользователей с OAuth провайдерами
+
+```prisma
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+```
+
+**Индексы**:
+- `[provider, providerAccountId]` (unique)
+- userId
+
+**Использование**:
+- Связывание Google аккаунтов с пользователями
+- Хранение OAuth токенов провайдеров
+- Поддержка multiple OAuth провайдеров на пользователя
+
+### Модель: VerificationToken
+Токены для верификации email и других операций
+
+```prisma
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+```
+
+**Индексы**:
+- `[identifier, token]` (unique)
+
+**Использование**:
+- Email верификация
+- Magic link авторизация (в будущем)
+- Другие верификационные процессы
+
 ## Конфигурация БД
 
 ### Docker Compose
 ```yaml
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: opus_postgres
+    image: postgres:16
+    container_name: opus-postgres-dev
+    restart: always
     environment:
-      POSTGRES_USER: opus_user
-      POSTGRES_PASSWORD: securepassword123
-      POSTGRES_DB: opus_db
+      POSTGRES_DB: opus_language
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data-dev:/var/lib/postgresql/data
 ```
 
 ### Connection String
 ```env
-DATABASE_URL="postgresql://opus_user:securepassword123@localhost:5432/opus_db"
+DATABASE_URL="postgresql://postgres@localhost:5432/opus_language?schema=public"
 ```
 
 ## Миграции

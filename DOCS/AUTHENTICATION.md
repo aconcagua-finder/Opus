@@ -256,6 +256,106 @@ docker exec opus-app-dev env | grep NODE_ENV
 
 **Примечание**: Все debug логи в production отключены. Логирование работает только при `NODE_ENV=development`.
 
+## Production Deployment
+
+### Environment Variables для Production
+```bash
+# Основные настройки
+NODE_ENV=production
+DATABASE_URL="postgresql://username:password@host:5432/database?schema=public"
+
+# NextAuth требует HTTPS в production
+NEXTAUTH_URL="https://yourdomain.com"
+NEXTAUTH_SECRET="secure-random-secret-key-32chars+"
+
+# Google OAuth production credentials
+GOOGLE_CLIENT_ID="your-production-google-client-id"
+GOOGLE_CLIENT_SECRET="your-production-google-client-secret"
+
+# JWT для custom auth
+JWT_SECRET="another-secure-secret-key-32chars+"
+```
+
+### SSL/HTTPS Requirements
+- **Google OAuth требует HTTPS** в production
+- Настройте SSL-сертификат (Let's Encrypt рекомендуется)
+- Обновите callback URL в Google Console: `https://yourdomain.com/api/auth/callback/google`
+
+### Google OAuth Console Setup
+1. Перейдите в [Google Cloud Console](https://console.cloud.google.com)
+2. Создайте новый проект или выберите существующий
+3. Включите Google+ API
+4. Создайте OAuth 2.0 credentials
+5. Добавьте authorized redirect URIs:
+   - Development: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://yourdomain.com/api/auth/callback/google`
+
+## Performance Considerations
+
+### JWT vs Session Strategy
+**Текущая конфигурация**: JWT Strategy
+- ✅ **Плюсы**: Stateless, масштабируемый, не требует хранения сессий
+- ❌ **Минусы**: Нельзя отозвать токен до истечения, больший размер
+
+**Альтернатива**: Database Session Strategy
+- ✅ **Плюсы**: Можно отзывать сессии, меньше данных в токене
+- ❌ **Минусы**: Требует запросы к БД, сложнее масштабирование
+
+### Redis Session Storage (рекомендуется для production)
+```typescript
+// lib/auth.ts
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { prisma } from "@/lib/prisma"
+import Redis from "ioredis"
+
+const redis = new Redis(process.env.REDIS_URL)
+
+export const authOptions: NextAuthOptions = {
+  // ... остальная конфигурация
+  session: {
+    strategy: "database", // Переключиться на database strategy
+    maxAge: 30 * 24 * 60 * 60, // 30 дней
+  },
+  // Опциональный Redis adapter для sessions
+  adapter: {
+    ...PrismaAdapter(prisma),
+    getSession: async (sessionToken) => {
+      const cached = await redis.get(`session:${sessionToken}`)
+      if (cached) return JSON.parse(cached)
+      // Fallback к БД
+      return await prisma.session.findUnique({...})
+    }
+  }
+}
+```
+
+### Rate Limiting
+Добавить в middleware для защиты от брутфорса:
+```typescript
+// middleware.ts - дополнение
+const rateLimiter = new Map()
+
+export async function middleware(request: NextRequest) {
+  // Rate limiting для auth endpoints
+  if (request.nextUrl.pathname.startsWith('/api/auth/')) {
+    const ip = request.ip || 'unknown'
+    const now = Date.now()
+    const windowStart = now - (15 * 60 * 1000) // 15 минут
+    
+    const requests = rateLimiter.get(ip) || []
+    const recentRequests = requests.filter(time => time > windowStart)
+    
+    if (recentRequests.length >= 10) { // 10 попыток за 15 минут
+      return new Response('Too Many Requests', { status: 429 })
+    }
+    
+    rateLimiter.set(ip, [...recentRequests, now])
+  }
+  
+  // Остальная логика middleware...
+}
+```
+
 ## Следующие шаги
 
 ### Запланированные улучшения
@@ -264,8 +364,8 @@ docker exec opus-app-dev env | grep NODE_ENV
 - 🚧 Email verification
 - 🚧 Password reset flow
 
-### Возможные оптимизации
-- Session-based strategy для production
-- Redis для session storage
-- Rate limiting через middleware
-- Advanced user roles и permissions
+### Производительность и масштабирование
+- 🚧 Redis session storage
+- 🚧 Database session strategy для production
+- 🚧 Advanced rate limiting
+- 🚧 Session analytics и monitoring
