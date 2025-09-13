@@ -4,18 +4,37 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/features/auth'
+import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { user, logout, isLoading } = useAuth()
+  const { user: jwtUser, logout: jwtLogout, isLoading: jwtLoading } = useAuth()
+  const { data: nextAuthSession, status: nextAuthStatus } = useSession()
   const [mounted, setMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Determine which authentication system is active
+  const isNextAuthLoading = nextAuthStatus === 'loading'
+  const isJwtLoading = jwtLoading
+  const isLoading = isNextAuthLoading || isJwtLoading
+  
+  const nextAuthUser = nextAuthSession?.user
+  const user = nextAuthUser || jwtUser
+  
+  // Logout function that handles both systems
+  const logout = async () => {
+    if (nextAuthSession) {
+      await signOut({ callbackUrl: '/' })
+    } else if (jwtUser) {
+      await jwtLogout()
+    }
+  }
 
   useEffect(() => {
     if (!isLoading && !user && mounted) {
@@ -143,7 +162,7 @@ export default function DashboardPage() {
       <main className="relative z-10 container mx-auto px-4 py-6 sm:py-12">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent mb-2">
-            Добро пожаловать обратно, {user.displayName || user.username || 'Пользователь'}!
+            Добро пожаловать обратно, {user.name || user.displayName || user.username || 'Пользователь'}!
           </h1>
           <p className="text-zinc-500 text-sm sm:text-base">
             Вот что происходит с вашим аккаунтом сегодня.

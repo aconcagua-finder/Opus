@@ -1,7 +1,7 @@
 # Opus - Образовательная платформа
 
 Версия: 0.1.0  
-Последнее обновление: 04.09.2025
+Последнее обновление: 13.09.2025
 
 ## Технологический стек
 
@@ -18,10 +18,12 @@
 - **Docker** - Контейнеризация БД
 
 ### Аутентификация
+- **NextAuth.js** - OAuth провайдеры (Google)
 - **JWT токены** - Access (15 мин) + Refresh (30 дней)
 - **bcryptjs** - Хеширование паролей
 - **HttpOnly Cookies** - Безопасное хранение токенов
 - **jose** - Работа с JWT
+- **Dual Auth System** - NextAuth + Custom JWT
 
 ### Стейт менеджмент
 - **Zustand** - Глобальный стейт
@@ -146,6 +148,14 @@ npm run dev
 DATABASE_URL="postgresql://postgres@localhost:5432/opus_language?schema=public"
 JWT_SECRET="your-secret-key-here"
 NEXT_PUBLIC_API_URL="/api"
+
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret-key"
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
 
 **Примечание**: При использовании Docker переменные окружения настроены автоматически.
@@ -165,14 +175,20 @@ NEXT_PUBLIC_API_URL="/api"
 - `POST /api/auth/logout` - выход
 - `POST /api/auth/refresh` - обновление токенов
 - `GET /api/auth/me` - текущий пользователь
+- `/api/auth/[...nextauth]` - NextAuth endpoints
 
 **Функции**:
-- Регистрация с валидацией
-- Вход с проверкой пароля
+- **Dual Auth System**: NextAuth.js + Custom JWT
+- **Google OAuth**: Быстрая авторизация через Google
+- **Email/Password**: Классическая регистрация
 - JWT токены (access + refresh)
 - Автоматическое обновление токенов
 - Защита от брутфорса (15 попыток)
 - Middleware для защиты роутов
+- Правильное отображение имен пользователей
+
+**OAuth Провайдеры**:
+- ✅ Google OAuth 2.0
 
 ### UI компоненты ✅
 
@@ -272,6 +288,8 @@ interface BaseStore<T> {
 - ✅ **Полная докеризация приложения**
 - ✅ Docker-compose для dev и prod режимов
 - ✅ Модуль авторизации (login/register/logout)
+- ✅ **Google OAuth авторизация**
+- ✅ **Dual Auth System** (NextAuth + Custom JWT)
 - ✅ JWT аутентификация
 - ✅ Middleware для защиты роутов
 - ✅ Базовые UI компоненты

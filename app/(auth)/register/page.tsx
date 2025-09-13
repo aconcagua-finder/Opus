@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { signIn } from 'next-auth/react'
 import { useAuth } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -80,6 +81,28 @@ export default function RegisterPage() {
       } else {
         setError('Произошла ошибка. Попробуйте снова.')
       }
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const result = await signIn('google', { 
+        callbackUrl: '/dashboard',
+        redirect: false 
+      })
+      
+      if (result?.error) {
+        setError('Ошибка входа через Google')
+        setIsLoading(false)
+      } else if (result?.url) {
+        window.location.href = result.url
+      }
+    } catch (err) {
+      setError('Ошибка входа через Google')
       setIsLoading(false)
     }
   }
@@ -287,6 +310,7 @@ export default function RegisterPage() {
                 type="button"
                 variant="outline"
                 disabled={isLoading}
+                onClick={handleGoogleSignIn}
                 className="w-full bg-transparent text-zinc-300 border border-zinc-800 hover:bg-zinc-900 transition-all"
               >
                 <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">

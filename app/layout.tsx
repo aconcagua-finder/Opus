@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/features/auth'
+import { NextAuthProvider } from '@/components/providers/session-provider'
 import ClientWrapper from '@/components/ClientWrapper'
 
 const inter = Inter({ 
@@ -24,7 +25,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <ClientWrapper>
-          <AuthProvider>
+          <NextAuthProvider>
+            <AuthProvider>
             <div className="fixed inset-0 bg-black" suppressHydrationWarning>
               <div className="absolute inset-0 gradient-bg-subtle" suppressHydrationWarning></div>
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" suppressHydrationWarning></div>
@@ -33,7 +35,8 @@ export default function RootLayout({
             <div className="relative min-h-screen" suppressHydrationWarning>
               {children}
             </div>
-          </AuthProvider>
+            </AuthProvider>
+          </NextAuthProvider>
         </ClientWrapper>
       </body>
     </html>

@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyAccessToken } from '@/features/auth/utils/jwt'
+import { getToken } from 'next-auth/jwt'
 
 // Публичные роуты, не требующие авторизации
 const publicPaths = [
   '/',
   '/login',
   '/register',
-  '/api/auth/login',
-  '/api/auth/register',
-  '/api/auth/refresh',
-  '/api/auth/logout',
 ]
 
 // Защищенные API роуты
@@ -23,6 +20,10 @@ const protectedApiPaths = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
+  // Пропускаем API routes авторизации
+  if (pathname.startsWith('/api/auth/')) {
+    return NextResponse.next()
+  }
   
   // Проверяем, является ли путь публичным
   const isPublicPath = publicPaths.some(path => 
@@ -39,60 +40,83 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // Получаем токен из заголовка Authorization или из cookie
-  const authHeader = request.headers.get('authorization')
-  const tokenFromHeader = authHeader?.replace('Bearer ', '')
-  
-  // Для страниц проверяем cookie, для API - заголовки
-  const tokenFromCookie = request.cookies.get('accessToken')?.value
-  const token = tokenFromHeader || tokenFromCookie
-  
-  console.log('Middleware: Processing path:', pathname)
-  console.log('Middleware: Token from cookie:', tokenFromCookie ? 'exists' : 'missing')
-  console.log('Middleware: Cookies:', request.cookies.getAll().map(c => c.name))
-  
-  if (!token) {
-    // Для API возвращаем 401
-    if (isProtectedApi) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-    
-    // Для страниц редиректим на логин
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('from', pathname)
-    return NextResponse.redirect(url)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware: Processing protected path:', pathname)
   }
   
+  // Попробуем найти действующий токен авторизации
+  let userId: string | null = null
+  let userEmail: string | null = null
+  
+  // Проверяем NextAuth JWT токен
   try {
-    // Верифицируем токен
-    const payload = await verifyAccessToken(token)
+    const nextAuthToken = await getToken({ 
+      req: request, 
+      secret: process.env.NEXTAUTH_SECRET 
+    })
     
-    // Добавляем userId в заголовки для использования в API роутах
-    const response = NextResponse.next()
-    response.headers.set('x-user-id', payload.userId)
-    response.headers.set('x-user-email', payload.email)
-    
-    return response
-    
-  } catch (error) {
-    // Токен невалидный или истек
-    if (isProtectedApi) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      )
+    if (nextAuthToken?.sub && nextAuthToken?.email) {
+      userId = nextAuthToken.sub
+      userEmail = nextAuthToken.email
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Middleware: NextAuth token valid for:', userEmail)
+      }
     }
-    
-    // Для страниц редиректим на логин
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('from', pathname)
-    return NextResponse.redirect(url)
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Middleware: NextAuth token check failed:', error)
+    }
   }
+  
+  // Если NextAuth не сработал, проверяем кастомный JWT
+  if (!userId) {
+    const authHeader = request.headers.get('authorization')
+    const tokenFromHeader = authHeader?.replace('Bearer ', '')
+    const tokenFromCookie = request.cookies.get('accessToken')?.value
+    const jwtToken = tokenFromHeader || tokenFromCookie
+    
+    if (jwtToken) {
+      try {
+        const payload = await verifyAccessToken(jwtToken)
+        userId = payload.userId
+        userEmail = payload.email
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Middleware: Custom JWT token valid for:', userEmail)
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Middleware: Custom JWT token verification failed:', error)
+        }
+      }
+    }
+  }
+  
+  // Если токен найден, пропускаем запрос с заголовками
+  if (userId && userEmail) {
+    const response = NextResponse.next()
+    response.headers.set('x-user-id', userId)
+    response.headers.set('x-user-email', userEmail)
+    return response
+  }
+  
+  // Если никакой авторизации не найдено
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware: No valid authentication found')
+  }
+  
+  // Для защищенных API возвращаем 401
+  if (isProtectedApi) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  // Для защищенных страниц редиректим на логин
+  const url = request.nextUrl.clone()
+  url.pathname = '/login'
+  url.searchParams.set('from', pathname)
+  return NextResponse.redirect(url)
 }
 
 export const config = {
