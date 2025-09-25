@@ -31,14 +31,14 @@ export async function createRefreshToken(
 
 export async function verifyAccessToken(token: string): Promise<JWTPayload> {
   const { payload } = await jwtVerify(token, JWT_SECRET)
-  return payload as JWTPayload
+  return payload as unknown as JWTPayload
 }
 
 export async function verifyRefreshToken(
   token: string
 ): Promise<RefreshTokenPayload> {
   const { payload } = await jwtVerify(token, JWT_REFRESH_SECRET)
-  return payload as RefreshTokenPayload
+  return payload as unknown as RefreshTokenPayload
 }
 
 export function getRefreshTokenExpiry(): Date {

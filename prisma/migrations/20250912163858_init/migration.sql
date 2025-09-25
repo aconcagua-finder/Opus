@@ -3,7 +3,7 @@ CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
-    "email_verified" BOOLEAN NOT NULL DEFAULT false,
+    "email_verified" TIMESTAMP(3),
     "email_verification_token" TEXT,
     "email_verification_expires_at" TIMESTAMP(3),
     "username" TEXT,

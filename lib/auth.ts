@@ -15,7 +15,7 @@ const adapter = {
     
     const userData = {
       email: user.email,
-      emailVerified: user.emailVerified ? true : true, // Google уже верифицировал email
+      emailVerified: new Date(), // Google уже верифицировал email
       displayName: user.name || null,
       avatarUrl: user.image || null,
     }
@@ -83,7 +83,7 @@ export const authOptions: NextAuthOptions = {
       try {
         if (token && session.user) {
           // В JWT strategy данные приходят из token, а не user
-          session.user.id = token.sub
+          session.user.id = token.sub || ""
           session.user.email = token.email || session.user.email
           session.user.name = token.name || token.displayName || session.user.name
           session.user.image = token.picture || session.user.image
@@ -137,7 +137,7 @@ export const authOptions: NextAuthOptions = {
           token.displayName = dbUser.displayName
           token.username = dbUser.username
           token.isActive = dbUser.isActive
-          token.createdAt = dbUser.createdAt
+          token.createdAt = dbUser.createdAt.toISOString()
         }
       }
       

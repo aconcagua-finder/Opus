@@ -11,7 +11,7 @@ model User {
   id                        String     @id @default(uuid())
   email                     String     @unique
   passwordHash              String?    @map("password_hash")
-  emailVerified             Boolean    @default(false) @map("email_verified")
+  emailVerified             DateTime?  @map("email_verified")
   emailVerificationToken    String?    @map("email_verification_token")
   emailVerificationExpiresAt DateTime? @map("email_verification_expires_at")
   
@@ -40,6 +40,7 @@ model User {
   passwordResetTokens       PasswordResetToken[]
   authAttempts              AuthAttempt[]
   accounts                  Account[]
+  dictionaryEntries         DictionaryEntry[]
   
   @@map("users")
   @@index([email])
@@ -138,4 +139,48 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Dictionary Models
+model DictionaryEntry {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  
+  // Основное слово
+  word         String
+  sourceLanguage Language @map("source_language")
+  
+  // Перевод
+  translation  String
+  targetLanguage Language @map("target_language")
+  
+  // Дополнительные поля
+  notes        String?  // Заметки пользователя
+  difficulty   Int?     @default(0) // Уровень сложности (0-5)
+  
+  // Статистика изучения
+  timesViewed  Int      @default(0) @map("times_viewed")
+  timesCorrect Int      @default(0) @map("times_correct")
+  lastReviewed DateTime? @map("last_reviewed")
+  
+  // Временные метки
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Связи
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("dictionary_entries")
+  @@index([userId])
+  @@index([sourceLanguage])
+  @@index([targetLanguage])
+  @@index([createdAt])
+  @@index([userId, sourceLanguage])
+  @@index([userId, word])
+}
+
+enum Language {
+  SPANISH
+  ENGLISH
+  RUSSIAN
 }

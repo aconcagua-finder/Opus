@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Подготовка безопасного пользователя
-    const { passwordHash: _, deletedAt: __, sessions: ___, accounts: ____, ...safeUser } = session.user
+    const { passwordHash: _, deletedAt: __, ...safeUser } = session.user
 
     // Установка новых cookies
     cookieStore.set('accessToken', newAccessToken, {

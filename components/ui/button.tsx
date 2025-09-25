@@ -11,7 +11,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', isLoading, children, disabled, ...props }, ref) => {
     // Убираем isLoading из props чтобы не передавать в DOM
     const buttonProps = { ...props }
-    delete buttonProps.loading
     const variants = {
       default: 'bg-cyan-600 text-white hover:bg-cyan-700',
       gradient: 'gradient-primary text-white hover:opacity-90',

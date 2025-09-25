@@ -95,6 +95,23 @@ export async function POST(request: NextRequest) {
     }
     
     // Проверка пароля
+    if (!user.passwordHash) {
+      await prisma.authAttempt.create({
+        data: {
+          email,
+          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+          userAgent: request.headers.get('user-agent'),
+          success: false,
+          failureReason: 'OAuth user attempted password login',
+        }
+      })
+      
+      return NextResponse.json(
+        { error: 'Неверный email или пароль' },
+        { status: 401 }
+      )
+    }
+    
     const isValidPassword = await verifyPassword(password, user.passwordHash)
     if (!isValidPassword) {
       await prisma.authAttempt.create({

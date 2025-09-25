@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (needed for build)
+RUN npm ci
 
 # Copy project files
 COPY . .
@@ -19,11 +19,14 @@ RUN npx prisma generate
 # Build the Next.js application
 RUN npm run build
 
+# Remove dev dependencies after build
+RUN npm prune --production
+
 # Expose the port
 EXPOSE 3000
 
 # Set environment variables
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "start"]
+# Run database migrations and start the application
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

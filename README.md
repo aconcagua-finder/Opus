@@ -221,6 +221,8 @@ docker-compose -f docker-compose.dev.yml down
 docker-compose -f docker-compose.dev.yml logs -f app
 ```
 
+> Контейнер приложения автоматически запускает `npx prisma migrate deploy` перед стартом, поэтому схема БД всегда соответствует актуальным Prisma миграциям.
+
 ### Локальные команды (если не используешь Docker)
 ```bash
 npm run dev          # Запуск dev-сервера

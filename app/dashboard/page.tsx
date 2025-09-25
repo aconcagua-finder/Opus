@@ -91,6 +91,12 @@ export default function DashboardPage() {
                   Панель управления
                 </Link>
                 <Link
+                  href="/dictionary"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all"
+                >
+                  📚 Словарь
+                </Link>
+                <Link
                   href="/settings"
                   className="px-3 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all"
                 >
@@ -142,6 +148,12 @@ export default function DashboardPage() {
                 Панель управления
               </Link>
               <Link
+                href="/dictionary"
+                className="block px-3 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all mt-1"
+              >
+                📚 Словарь
+              </Link>
+              <Link
                 href="/settings"
                 className="block px-3 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all mt-1"
               >
@@ -162,7 +174,7 @@ export default function DashboardPage() {
       <main className="relative z-10 container mx-auto px-4 py-6 sm:py-12">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent mb-2">
-            Добро пожаловать обратно, {user.name || user.displayName || user.username || 'Пользователь'}!
+            Добро пожаловать обратно, {('displayName' in user ? user.displayName : user.name) || ('username' in user ? user.username : undefined) || user.email?.split('@')[0] || 'Пользователь'}!
           </h1>
           <p className="text-zinc-500 text-sm sm:text-base">
             Вот что происходит с вашим аккаунтом сегодня.
@@ -260,6 +272,18 @@ export default function DashboardPage() {
         <div className="mt-8 sm:mt-12">
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Быстрые действия</h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Link href="/dictionary">
+              <Button
+                variant="outline"
+                className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2 bg-zinc-950/50 border-zinc-800/50 backdrop-blur hover:bg-zinc-900 text-zinc-300 p-2 sm:p-4 w-full hover:border-cyan-900/50 hover:text-cyan-300 transition-all"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span className="text-xs sm:text-sm text-center">📚 Мой словарь</span>
+              </Button>
+            </Link>
+
             <Button
               variant="outline"
               className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2 bg-zinc-950/50 border-zinc-800/50 backdrop-blur hover:bg-zinc-900 text-zinc-300 p-2 sm:p-4"

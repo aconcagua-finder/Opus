@@ -152,7 +152,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-4 px-4 sm:px-6">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="error">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
