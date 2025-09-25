@@ -15,6 +15,7 @@ const protectedApiPaths = [
   '/api/user',
   '/api/courses',
   '/api/lessons',
+  '/api/dictionary',
 ]
 
 export async function middleware(request: NextRequest) {
@@ -69,7 +70,9 @@ export async function middleware(request: NextRequest) {
   }
   
   // Если NextAuth не сработал, проверяем кастомный JWT
-  if (!userId) {
+  // ВАЖНО: в Edge Runtime jose не работает, поэтому пропускаем custom JWT проверку
+  const isEdgeRuntime = 'EdgeRuntime' in globalThis
+  if (!userId && !isEdgeRuntime) {
     const authHeader = request.headers.get('authorization')
     const tokenFromHeader = authHeader?.replace('Bearer ', '')
     const tokenFromCookie = request.cookies.get('accessToken')?.value
@@ -93,10 +96,15 @@ export async function middleware(request: NextRequest) {
   
   // Если токен найден, пропускаем запрос с заголовками
   if (userId && userEmail) {
-    const response = NextResponse.next()
-    response.headers.set('x-user-id', userId)
-    response.headers.set('x-user-email', userEmail)
-    return response
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-user-id', userId)
+    requestHeaders.set('x-user-email', userEmail)
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
   }
   
   // Если никакой авторизации не найдено

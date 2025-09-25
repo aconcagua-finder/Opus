@@ -56,6 +56,7 @@
     /stores           # Zustand хранилища
     /types            # TypeScript типы
     /utils            # Утилиты (jwt, password)
+  /dictionary         # Модуль словаря (CRUD + статистика)
     
 /components            # Общие компоненты
   /ui                 # Базовые UI компоненты
@@ -103,6 +104,11 @@
    - React Query для серверного стейта
    - Автоматическое обновление токенов
 
+4. **Персональный словарь**:
+   - CRUD API `/api/dictionary`, `/api/dictionary/[id]`, `/api/dictionary/stats`
+   - Валидация через Zod и защита middleware
+   - Индексы для фильтрации по языкам, сложности и дате
+
 ## Запуск проекта
 
 ### Предварительные требования
@@ -117,16 +123,13 @@
 git clone [repo-url]
 cd opus
 
-# Установка зависимостей
+# Запуск стека разработки в Docker (рекомендуется)
+docker compose -f docker-compose.dev.yml up --build
+
+# Контейнер приложения автоматически выполняет `npx prisma migrate deploy`
+
+# Локальный запуск без Docker (опционально)
 npm install
-
-# Запуск PostgreSQL в Docker
-docker-compose up -d
-
-# Применение миграций БД
-npx prisma migrate dev
-
-# Запуск dev-сервера
 npm run dev
 ```
 
@@ -178,6 +181,22 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 **OAuth Провайдеры**:
 - ✅ Google OAuth 2.0
 
+### Модуль словаря ✅
+
+**Страницы**:
+- `/dictionary` - управление персональным словарём
+
+**API endpoints**:
+- `GET/POST /api/dictionary` - список и добавление слов
+- `GET/PUT/DELETE /api/dictionary/:id` - операции над конкретной записью
+- `GET /api/dictionary/stats` - агрегированная статистика
+
+**Функции**:
+- Пагинация, фильтрация по языкам и поиск по тексту
+- Форма добавления с валидацией Zod и выбором языков
+- Карточка слова с переключением слово/перевод и счётчиками
+- Автоматические индикаторы сложности и метрики просмотров
+
 ### UI компоненты ✅
 
 **Базовые**:
@@ -195,11 +214,14 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ## Команды разработки
 
 ```bash
-npm run dev          # Запуск dev-сервера
+docker compose -f docker-compose.dev.yml up --build   # Запуск dev-стека в Docker
+docker compose -f docker-compose.dev.yml down         # Остановка контейнеров
+
+npm run dev          # Локальный dev-сервер без Docker
 npm run build        # Production сборка
 npm run start        # Запуск production
 npx prisma studio    # GUI для БД
-npx prisma migrate dev  # Создание миграций
+npx prisma migrate dev  # Создание миграций (локально)
 ```
 
 ## Принципы разработки
@@ -255,6 +277,7 @@ interface BaseStore<T> {
 - ✅ **Dual Auth System** (NextAuth + Custom JWT)
 - ✅ JWT аутентификация
 - ✅ Middleware для защиты роутов
+- ✅ Модуль словаря (личный словарь с CRUD и статистикой)
 - ✅ Базовые UI компоненты
 - ✅ Темная тема с cyan акцентами
 - ✅ Русская локализация

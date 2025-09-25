@@ -111,65 +111,87 @@ NextAuth создает автоматически:
 
 ### Configuration (`middleware.ts`)
 ```typescript
-// Публичные роуты
 const publicPaths = ['/', '/login', '/register']
 
-// Защищенные API роуты  
-const protectedApiPaths = ['/api/user', '/api/courses', '/api/lessons']
+const protectedApiPaths = [
+  '/api/user',
+  '/api/courses',
+  '/api/lessons',
+  '/api/dictionary',
+]
 
 export async function middleware(request: NextRequest) {
-  // Пропускаем API routes авторизации
+  const { pathname } = request.nextUrl
+
   if (pathname.startsWith('/api/auth/')) {
     return NextResponse.next()
   }
-  
-  // Проверяем, является ли путь публичным
-  const isPublicPath = publicPaths.some(path => 
+
+  const isPublicPath = publicPaths.some(path =>
     pathname === path || pathname.startsWith(path + '/')
   )
-  
   if (isPublicPath) {
     return NextResponse.next()
   }
 
-  // 1. Проверка NextAuth JWT токена
-  const nextAuthToken = await getToken({ 
-    req: request, 
-    secret: process.env.NEXTAUTH_SECRET 
-  })
-  
-  if (nextAuthToken?.sub && nextAuthToken?.email) {
-    // NextAuth токен валиден
-    const response = NextResponse.next()
-    response.headers.set('x-user-id', nextAuthToken.sub)
-    response.headers.set('x-user-email', nextAuthToken.email)
-    return response
-  }
-  
-  // 2. Fallback на Custom JWT
-  const authHeader = request.headers.get('authorization')
-  const tokenFromHeader = authHeader?.replace('Bearer ', '')
-  const tokenFromCookie = request.cookies.get('accessToken')?.value
-  const jwtToken = tokenFromHeader || tokenFromCookie
-  
-  if (jwtToken) {
-    try {
-      const payload = await verifyAccessToken(jwtToken)
-      const response = NextResponse.next()
-      response.headers.set('x-user-id', payload.userId)
-      response.headers.set('x-user-email', payload.email)
-      return response
-    } catch (error) {
-      // Token invalid
+  let userId: string | null = null
+  let userEmail: string | null = null
+
+  try {
+    const nextAuthToken = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    })
+    if (nextAuthToken?.sub && nextAuthToken?.email) {
+      userId = nextAuthToken.sub
+      userEmail = nextAuthToken.email
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Middleware: NextAuth token check failed:', error)
     }
   }
-  
-  // 3. Redirect или 401 если не авторизован
-  if (isProtectedApi) {
+
+  const isEdgeRuntime = 'EdgeRuntime' in globalThis
+  if (!userId && !isEdgeRuntime) {
+    const authHeader = request.headers.get('authorization')
+    const tokenFromHeader = authHeader?.replace('Bearer ', '')
+    const tokenFromCookie = request.cookies.get('accessToken')?.value
+    const jwtToken = tokenFromHeader || tokenFromCookie
+
+    if (jwtToken) {
+      try {
+        const payload = await verifyAccessToken(jwtToken)
+        userId = payload.userId
+        userEmail = payload.email
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Middleware: Custom JWT token verification failed:', error)
+        }
+      }
+    }
+  }
+
+  if (userId && userEmail) {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-user-id', userId)
+    requestHeaders.set('x-user-email', userEmail)
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware: No valid authentication found')
+  }
+
+  if (protectedApiPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  
-  // Для страниц - редирект на login
+
   const url = request.nextUrl.clone()
   url.pathname = '/login'
   url.searchParams.set('from', pathname)

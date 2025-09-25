@@ -14,49 +14,45 @@
 model User {
   id                        String     @id @default(uuid())
   email                     String     @unique
-  passwordHash              String     @map("password_hash")
-  emailVerified             Boolean    @default(false)
-  emailVerificationToken    String?
-  emailVerificationExpiresAt DateTime?
-  
-  // Профиль
+  passwordHash              String?    @map("password_hash")
+  emailVerified             DateTime?  @map("email_verified")
+  emailVerificationToken    String?    @map("email_verification_token")
+  emailVerificationExpiresAt DateTime? @map("email_verification_expires_at")
+
   username                  String?    @unique
-  displayName               String?
-  avatarUrl                 String?
-  
-  // Статусы
-  isActive                  Boolean    @default(true)
-  isBanned                  Boolean    @default(false)
-  banReason                 String?
-  bannedUntil               DateTime?
-  
-  // Метаданные для расширения
+  displayName               String?    @map("display_name")
+  avatarUrl                 String?    @map("avatar_url")
+
+  isActive                  Boolean    @default(true) @map("is_active")
+  isBanned                  Boolean    @default(false) @map("is_banned")
+  banReason                 String?    @map("ban_reason")
+  bannedUntil               DateTime?  @map("banned_until")
+
   metadata                  Json       @default("{}")
-  
-  // Временные метки
-  createdAt                 DateTime   @default(now())
-  updatedAt                 DateTime   @updatedAt
-  deletedAt                 DateTime?
-  lastLoginAt               DateTime?
-  
-  // Связи
+
+  createdAt                 DateTime   @default(now()) @map("created_at")
+  updatedAt                 DateTime   @updatedAt @map("updated_at")
+  deletedAt                 DateTime?  @map("deleted_at")
+  lastLoginAt               DateTime?  @map("last_login_at")
+
   sessions                  Session[]
   passwordResetTokens       PasswordResetToken[]
   authAttempts              AuthAttempt[]
+  accounts                  Account[]
+  dictionaryEntries         DictionaryEntry[]
+
+  @@map("users")
+  @@index([email])
+  @@index([username])
+  @@index([deletedAt])
 }
 ```
 
-**Индексы**:
-- email (unique)
-- username (unique) 
-- deletedAt
-
-**Использование**:
-- Хранение учетных данных пользователей
-- Профильная информация
-- Управление статусами (активный/заблокирован)
-- Soft delete через deletedAt
-- metadata для расширения без миграций
+**Особенности**:
+- `passwordHash` опционален (OAuth пользователи приходят без пароля)
+- `emailVerified` хранится как `DateTime?`, что совместимо с NextAuth
+- Все пользовательские поля промаркированы `@map` под snake_case схему
+- Связь `dictionaryEntries` связывает пользователя со словарём
 
 ### Модель: Session
 Сессии пользователей для JWT refresh токенов
@@ -202,6 +198,7 @@ model VerificationToken {
 }
 ```
 
+
 **Индексы**:
 - `[identifier, token]` (unique)
 
@@ -210,6 +207,55 @@ model VerificationToken {
 - Magic link авторизация (в будущем)
 - Другие верификационные процессы
 
+
+## Модуль: Словарь (dictionary)
+
+### Модель: DictionaryEntry
+Словарные записи с пользовательскими статистиками
+
+```prisma
+model DictionaryEntry {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+
+  word           String
+  sourceLanguage Language @map("source_language")
+  translation    String
+  targetLanguage Language @map("target_language")
+
+  notes          String?
+  difficulty     Int?     @default(0)
+
+  timesViewed    Int      @default(0) @map("times_viewed")
+  timesCorrect   Int      @default(0) @map("times_correct")
+  lastReviewed   DateTime? @map("last_reviewed")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dictionary_entries")
+  @@index([userId])
+  @@index([sourceLanguage])
+  @@index([targetLanguage])
+  @@index([createdAt])
+  @@index([userId, sourceLanguage])
+  @@index([userId, word])
+}
+```
+
+**Дополнительные индексы миграции**:
+- `dictionary_entries_user_languages_idx` (комбинация user + языков)
+- `dictionary_entries_created_at_desc_idx` (сортировка по дате)
+- `dictionary_entries_difficulty_idx` (частичный индекс по сложности)
+- `dictionary_entries_last_reviewed_desc_idx` (частичный индекс по повторениям)
+
+**Использование**:
+- CRUD-операции словаря и фильтрация по языкам
+- Сбор статистики просмотров и правильных ответов
+- Быстрый поиск по тексту
+- Привязка записей к пользователю через `userId`
 ## Конфигурация БД
 
 ### Docker Compose
