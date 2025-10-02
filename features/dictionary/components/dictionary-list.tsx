@@ -167,7 +167,13 @@ export function DictionaryList({ onEditWord }: DictionaryListProps) {
                 key={entry.id}
                 entry={entry}
                 onEdit={() => onEditWord?.(entry.id)}
-                onDelete={(entry) => deleteEntry(entry.id)}
+                onDelete={async (entry) => {
+                  try {
+                    await deleteEntry(entry.id)
+                  } catch (err) {
+                    console.error('Failed to delete entry', err)
+                  }
+                }}
               />
             ))}
           </div>

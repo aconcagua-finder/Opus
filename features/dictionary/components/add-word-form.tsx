@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createDictionaryEntrySchema, CreateDictionaryEntryInput } from '../utils/validation'
 import { useDictionary } from '../hooks/use-dictionary'
-import { Language } from '../types'
+import { Language, DictionaryEntry } from '../types'
 import { LanguageSelector } from './language-selector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,15 +13,142 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
 
 interface AddWordFormProps {
+  mode?: 'create' | 'edit'
+  entry?: DictionaryEntry
+  userId?: string
   onSuccess?: () => void
   onCancel?: () => void
   isModal?: boolean
 }
 
-export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFormProps) {
-  const { createEntry, isLoading, error, clearError } = useDictionary()
+type FormPreferences = {
+  sourceLanguage: Language
+  targetLanguage: Language
+  difficulty: number
+}
+
+const FORM_PREFERENCES_KEY = 'dictionary-form-preferences-v1'
+
+const isLanguage = (value: unknown): value is Language =>
+  Object.values(Language).includes(value as Language)
+
+const loadPreferences = (userId?: string): FormPreferences | null => {
+  if (typeof window === 'undefined' || !userId) {
+    return null
+  }
+
+  try {
+    const raw = window.localStorage.getItem(FORM_PREFERENCES_KEY)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw)
+    const stored = parsed?.[userId]
+    if (!stored) return null
+
+    if (!isLanguage(stored.sourceLanguage) || !isLanguage(stored.targetLanguage)) {
+      return null
+    }
+
+    return {
+      sourceLanguage: stored.sourceLanguage,
+      targetLanguage: stored.targetLanguage,
+      difficulty: typeof stored.difficulty === 'number' ? stored.difficulty : 0,
+    }
+  } catch (error) {
+    console.warn('Failed to load dictionary preferences', error)
+    return null
+  }
+}
+
+const savePreferences = (userId: string, preferences: FormPreferences) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const raw = window.localStorage.getItem(FORM_PREFERENCES_KEY)
+    const parsed = raw ? JSON.parse(raw) : {}
+    parsed[userId] = preferences
+    window.localStorage.setItem(FORM_PREFERENCES_KEY, JSON.stringify(parsed))
+  } catch (error) {
+    console.warn('Failed to save dictionary preferences', error)
+  }
+}
+
+export function AddWordForm({
+  mode = 'create',
+  entry,
+  userId,
+  onSuccess,
+  onCancel,
+  isModal = false,
+}: AddWordFormProps) {
+  const isEditMode = mode === 'edit'
+
+  const { createEntry, updateEntry, isLoading, error, clearError } = useDictionary()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [preferences, setPreferences] = useState<FormPreferences | null>(null)
+  const [preferencesReady, setPreferencesReady] = useState(isEditMode)
+  const clearErrorRef = useRef(clearError)
+
+  useEffect(() => {
+    clearErrorRef.current = clearError
+  }, [clearError])
+
+  useEffect(() => {
+    clearErrorRef.current?.()
+
+    if (isEditMode) {
+      setPreferencesReady(true)
+      return
+    }
+
+    if (!userId) {
+      setPreferencesReady(true)
+      return
+    }
+
+    const loaded = loadPreferences(userId)
+    if (loaded) {
+      setPreferences(loaded)
+    }
+
+    setPreferencesReady(true)
+  }, [isEditMode, entry?.id, userId])
+
+  if (isEditMode && !entry) {
+    console.warn('AddWordForm: entry is required when mode="edit"')
+    return null
+  }
   
+  const defaultValues = useMemo<Partial<CreateDictionaryEntryInput>>(() => {
+    if (isEditMode && entry) {
+      return {
+        word: entry.word,
+        translation: entry.translation,
+        notes: entry.notes ?? '',
+        sourceLanguage: entry.sourceLanguage,
+        targetLanguage: entry.targetLanguage,
+        difficulty: entry.difficulty ?? 0,
+      }
+    }
+
+    const fallbackSource = preferences?.sourceLanguage ?? Language.ENGLISH
+    let fallbackTarget = preferences?.targetLanguage ?? Language.RUSSIAN
+    if (fallbackTarget === fallbackSource) {
+      fallbackTarget = fallbackSource === Language.ENGLISH ? Language.RUSSIAN : Language.ENGLISH
+    }
+
+    return {
+      word: '',
+      translation: '',
+      notes: '',
+      sourceLanguage: fallbackSource,
+      targetLanguage: fallbackTarget,
+      difficulty: preferences?.difficulty ?? 0,
+    }
+  }, [isEditMode, entry, preferences])
+
   const {
     register,
     handleSubmit,
@@ -31,23 +158,69 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
     formState: { errors }
   } = useForm<CreateDictionaryEntryInput>({
     resolver: zodResolver(createDictionaryEntrySchema),
-    defaultValues: {
-      difficulty: 0
-    }
+    defaultValues: defaultValues as CreateDictionaryEntryInput
   })
+
+  useEffect(() => {
+    if (preferencesReady) {
+      reset(defaultValues as CreateDictionaryEntryInput)
+    }
+  }, [preferencesReady, defaultValues, reset])
+
+  useEffect(() => {
+    setIsSubmitting(false)
+  }, [isEditMode, entry?.id])
 
   const sourceLanguage = watch('sourceLanguage')
   const targetLanguage = watch('targetLanguage')
+  const difficultyValue = watch('difficulty') ?? 0
+
+  useEffect(() => {
+    if (isEditMode || !userId || !preferencesReady) {
+      return
+    }
+
+    if (!sourceLanguage || !targetLanguage) {
+      return
+    }
+
+    savePreferences(userId, {
+      sourceLanguage,
+      targetLanguage,
+      difficulty: typeof difficultyValue === 'number' ? difficultyValue : 0,
+    })
+  }, [isEditMode, userId, preferencesReady, sourceLanguage, targetLanguage, difficultyValue])
+
+  const handleCancel = () => {
+    clearErrorRef.current?.()
+    onCancel?.()
+  }
 
   const onSubmit = async (data: CreateDictionaryEntryInput) => {
     if (isSubmitting) return
     
     setIsSubmitting(true)
-    clearError()
+    clearErrorRef.current?.()
     
     try {
-      await createEntry(data)
-      reset()
+      if (isEditMode && entry) {
+        await updateEntry(entry.id, data)
+        reset({
+          ...data,
+          notes: data.notes ?? '',
+        })
+      } else {
+        await createEntry(data)
+        reset({
+          word: '',
+          translation: '',
+          notes: '',
+          sourceLanguage: data.sourceLanguage,
+          targetLanguage: data.targetLanguage,
+          difficulty: data.difficulty ?? 0,
+        })
+      }
+
       onSuccess?.()
     } catch (err) {
       // Ошибка уже обрабатывается в store
@@ -72,7 +245,7 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
           </label>
           <LanguageSelector
             value={sourceLanguage}
-            onChange={(language) => setValue('sourceLanguage', language)}
+            onChange={(language) => setValue('sourceLanguage', language, { shouldDirty: true, shouldValidate: true })}
             placeholder="Язык изучаемого слова"
           />
           {errors.sourceLanguage && (
@@ -86,7 +259,7 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
           </label>
           <LanguageSelector
             value={targetLanguage}
-            onChange={(language) => setValue('targetLanguage', language)}
+            onChange={(language) => setValue('targetLanguage', language, { shouldDirty: true, shouldValidate: true })}
             placeholder="Язык перевода"
           />
           {errors.targetLanguage && (
@@ -170,7 +343,7 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
           <Button
             type="button"
             variant="ghost"
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={isSubmitting}
           >
             Отмена
@@ -181,7 +354,9 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
           disabled={isSubmitting || isLoading}
           className="bg-cyan-600 hover:bg-cyan-700 text-white"
         >
-          {isSubmitting ? 'Добавляем...' : 'Добавить слово'}
+          {isSubmitting
+            ? isEditMode ? 'Сохраняем...' : 'Добавляем...'
+            : isEditMode ? 'Сохранить изменения' : 'Добавить слово'}
         </Button>
       </div>
     </form>
@@ -192,9 +367,11 @@ export function AddWordForm({ onSuccess, onCancel, isModal = false }: AddWordFor
   }
 
   return (
-    <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
+    <Card className={`bg-zinc-950/50 border-zinc-800/50 backdrop-blur ${isEditMode ? 'border-cyan-600/40 shadow-[0_0_20px_rgba(8,145,178,0.25)]' : ''}`}>
       <CardHeader>
-        <CardTitle className="text-white">Добавить новое слово</CardTitle>
+        <CardTitle className="text-white">
+          {isEditMode ? 'Редактировать слово' : 'Добавить новое слово'}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {formContent}

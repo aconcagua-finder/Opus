@@ -190,6 +190,13 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 **OAuth Провайдеры**:
 - ✅ Google OAuth 2.0
 
+### Модуль словаря ✅
+
+- `/dictionary` — персональный словарь с CRUD и статистикой
+- API: `GET/POST /api/dictionary`, `GET/PUT/DELETE /api/dictionary/:id`, `GET /api/dictionary/stats`
+- Форма запоминает последние выбранные языки и сложность, поддерживается редактирование записей
+- Фильтры, пагинация и карточки слов с индикатором сложности
+
 ### UI компоненты ✅
 
 **Базовые**:

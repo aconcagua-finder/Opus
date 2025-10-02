@@ -1,22 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/features/auth'
 import { useSession } from 'next-auth/react'
-import { DictionaryList, AddWordForm, useDictionary } from '@/features/dictionary'
+import { DictionaryList, AddWordForm, useDictionary, getLanguageFlag, Language } from '@/features/dictionary'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ProtectedNav } from '@/components/navigation/protected-nav'
 
 export default function DictionaryPage() {
   const router = useRouter()
   const { user: jwtUser, isLoading: jwtLoading } = useAuth()
   const { data: nextAuthSession, status: nextAuthStatus } = useSession()
-  const { stats } = useDictionary()
+  const { stats, entries } = useDictionary()
   
   const [mounted, setMounted] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -29,12 +30,39 @@ export default function DictionaryPage() {
   
   const nextAuthUser = nextAuthSession?.user
   const user = nextAuthUser || jwtUser
+  const userId = (user as { id?: string } | null | undefined)?.id || undefined
+
+  const editingEntry = useMemo(() => {
+    if (!editingEntryId) return null
+    return entries.find((item) => item.id === editingEntryId) ?? null
+  }, [entries, editingEntryId])
+
+  const topLanguageEntry = useMemo(() => {
+    if (!stats) return null
+    const sorted = Object.entries(stats.entriesByLanguage).sort(([, a], [, b]) => b - a)
+    return sorted[0] ?? null
+  }, [stats])
 
   useEffect(() => {
     if (!isLoading && !user && mounted) {
       router.push('/login')
     }
   }, [user, isLoading, router, mounted])
+
+  useEffect(() => {
+    if (editingEntryId && !editingEntry) {
+      setEditingEntryId(null)
+    }
+  }, [editingEntryId, editingEntry])
+
+  const handleEditWord = (id: string) => {
+    setEditingEntryId(id)
+    setShowAddForm(false)
+  }
+
+  const handleEditComplete = () => {
+    setEditingEntryId(null)
+  }
 
   if (!mounted || isLoading) {
     return (
@@ -50,47 +78,7 @@ export default function DictionaryPage() {
 
   return (
     <div className="min-h-screen" suppressHydrationWarning>
-      {/* Navigation */}
-      <nav className="border-b border-zinc-800" suppressHydrationWarning>
-        <div className="container mx-auto px-4" suppressHydrationWarning>
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="text-xl sm:text-2xl font-bold gradient-text-cyan">
-                Opus
-              </Link>
-              
-              <div className="hidden md:flex items-center space-x-1">
-                <Link
-                  href="/dashboard"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all"
-                >
-                  Главная
-                </Link>
-                <div className="px-3 py-2 rounded-md text-sm font-medium text-white bg-zinc-900 flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  <span>Словарь</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <span className="text-zinc-500 text-sm hidden sm:block">
-                {user.email}
-              </span>
-              <Link href="/dashboard">
-                <Button
-                  className="bg-transparent text-cyan-400 border border-cyan-900/50 hover:bg-cyan-950/30 hover:border-cyan-700/50 transition-all"
-                  size="sm"
-                >
-                  ← Назад
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ProtectedNav />
 
       {/* Main Content */}
       <main className="relative z-10 container mx-auto px-4 py-6 sm:py-12">
@@ -169,18 +157,25 @@ export default function DictionaryPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-lg font-bold text-white">
-                  {Object.entries(stats.entriesByLanguage)
-                    .sort(([,a], [,b]) => b - a)[0]?.[0] === 'SPANISH' ? '🇪🇸' :
-                   Object.entries(stats.entriesByLanguage)
-                    .sort(([,a], [,b]) => b - a)[0]?.[0] === 'ENGLISH' ? '🇺🇸' :
-                   Object.entries(stats.entriesByLanguage)
-                    .sort(([,a], [,b]) => b - a)[0]?.[0] === 'RUSSIAN' ? '🇷🇺' : '🌐'}
+                  {topLanguageEntry ? getLanguageFlag(topLanguageEntry[0] as Language) : '🌐'}
                 </div>
                 <p className="text-xs text-zinc-500">
-                  {Object.entries(stats.entriesByLanguage).sort(([,a], [,b]) => b - a)[0]?.[1] || 0} слов
+                  {topLanguageEntry ? topLanguageEntry[1] : 0} слов
                 </p>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {editingEntry && (
+          <div className="mb-8">
+            <AddWordForm
+              mode="edit"
+              entry={editingEntry}
+              userId={userId}
+              onSuccess={handleEditComplete}
+              onCancel={handleEditComplete}
+            />
           </div>
         )}
 
@@ -199,6 +194,7 @@ export default function DictionaryPage() {
         {showAddForm && (
           <div className="mb-8">
             <AddWordForm 
+              userId={userId}
               onSuccess={() => setShowAddForm(false)}
               onCancel={() => setShowAddForm(false)}
             />
@@ -206,7 +202,7 @@ export default function DictionaryPage() {
         )}
 
         {/* Dictionary List */}
-        <DictionaryList />
+        <DictionaryList onEditWord={handleEditWord} />
       </main>
     </div>
   )

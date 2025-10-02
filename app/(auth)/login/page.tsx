@@ -41,7 +41,7 @@ export default function LoginPage() {
     try {
       await login({ email: data.email, password: data.password })
       // Полная перезагрузка страницы чтобы middleware увидел cookies
-      window.location.href = '/dashboard'
+      window.location.href = '/dictionary'
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message)
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
     try {
       const result = await signIn('google', { 
-        callbackUrl: '/dashboard',
+        callbackUrl: '/dictionary',
         redirect: false 
       })
       

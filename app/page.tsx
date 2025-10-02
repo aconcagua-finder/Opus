@@ -20,9 +20,9 @@ export default function HomePage() {
               {isAuthenticated ? (
                 <>
                   <span className="hidden sm:inline text-cyan-500/70 text-sm">Привет, {user?.displayName || user?.email}</span>
-                  <Link href="/dashboard">
+                  <Link href="/dictionary">
                     <Button className="bg-transparent text-cyan-400 border border-cyan-900/50 hover:bg-cyan-950/30 hover:border-cyan-700/50 transition-all text-sm sm:text-base px-3 sm:px-4">
-                      Панель
+                      Словарь
                     </Button>
                   </Link>
                   <Button onClick={logout} className="bg-transparent text-zinc-300 hover:text-cyan-400 transition-all text-sm sm:text-base px-3 sm:px-4">

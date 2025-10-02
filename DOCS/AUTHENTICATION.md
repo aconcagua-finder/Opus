@@ -209,7 +209,7 @@ export async function middleware(request: NextRequest) {
 5. NextAuth `createUser` создает пользователя (если новый)
 6. NextAuth `jwt` callback добавляет данные в токен
 7. NextAuth `session` callback формирует session
-8. Редирект на `/dashboard` с правильным именем
+8. Редирект на `/dictionary` с правильным именем
 
 ### Email/Password Flow
 1. Пользователь заполняет форму регистрации/входа
@@ -217,7 +217,7 @@ export async function middleware(request: NextRequest) {
 3. Создание/проверка пользователя в БД
 4. Генерация JWT токенов (access + refresh)
 5. Установка HttpOnly cookies
-6. Редирект на `/dashboard`
+6. Редирект на `/dictionary`
 
 ## Безопасность
 

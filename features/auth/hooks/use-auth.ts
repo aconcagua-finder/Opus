@@ -225,7 +225,7 @@ export function useRequireAuth(options: UseAuthOptions = {}) {
 // Хук для гостевых страниц (логин, регистрация)
 export function useGuestOnly(options: UseAuthOptions = {}) {
   const defaultOptions: UseAuthOptions = {
-    redirectTo: '/dashboard',
+    redirectTo: '/dictionary',
     redirectIfFound: true,
     ...options,
   }
