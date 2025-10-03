@@ -18,7 +18,7 @@ export interface DictionaryEntry {
   
   // Дополнительные поля
   notes?: string
-  difficulty?: number
+  difficulty?: number | null // legacy field, not used by current UI
   
   // Статистика изучения
   timesViewed: number
@@ -36,7 +36,6 @@ export interface CreateDictionaryEntryData {
   translation: string
   targetLanguage: Language
   notes?: string
-  difficulty?: number
 }
 
 export interface UpdateDictionaryEntryData {
@@ -45,7 +44,6 @@ export interface UpdateDictionaryEntryData {
   translation?: string
   targetLanguage?: Language
   notes?: string
-  difficulty?: number
 }
 
 export interface DictionaryFilters {

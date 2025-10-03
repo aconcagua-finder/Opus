@@ -37,6 +37,7 @@ interface DictionaryStore {
   updateEntry: (id: string, data: UpdateDictionaryEntryData) => Promise<DictionaryEntry>
   deleteEntry: (id: string) => Promise<void>
   refreshEntries: () => Promise<void>
+  importEntries: (entries: CreateDictionaryEntryData[]) => Promise<{ created: number; skipped: number }>
 }
 
 export const useDictionaryStore = create<DictionaryStore>()(
@@ -168,6 +169,27 @@ export const useDictionaryStore = create<DictionaryStore>()(
         const currentLimit = pagination?.limit || 20
         
         await get().fetchEntries(currentPage, currentLimit)
+      },
+
+      importEntries: async (entries: CreateDictionaryEntryData[]) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const result = await dictionaryAPI.importEntries(entries)
+
+          await Promise.all([
+            get().refreshEntries(),
+            get().fetchStats(),
+          ])
+
+          return result
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to import entries'
+          set({ error: message })
+          throw error
+        } finally {
+          set({ isLoading: false })
+        }
       }
     }),
     {

@@ -20,10 +20,6 @@ export const createDictionaryEntrySchema = z.object({
     .max(500, 'Заметки не могут быть длиннее 500 символов')
     .trim()
     .optional(),
-  difficulty: z.number()
-    .min(0, 'Сложность не может быть меньше 0')
-    .max(5, 'Сложность не может быть больше 5')
-    .optional()
 }).refine(
   (data) => data.sourceLanguage !== data.targetLanguage,
   {
@@ -49,10 +45,6 @@ export const updateDictionaryEntrySchema = z.object({
     .max(500, 'Заметки не могут быть длиннее 500 символов')
     .trim()
     .optional(),
-  difficulty: z.number()
-    .min(0, 'Сложность не может быть меньше 0')
-    .max(5, 'Сложность не может быть больше 5')
-    .optional()
 })
 
 export const dictionaryFiltersSchema = z.object({

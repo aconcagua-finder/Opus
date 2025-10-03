@@ -245,10 +245,12 @@ model DictionaryEntry {
 }
 ```
 
+> Примечание: поле `difficulty` сохранено в схеме для будущих сценариев, но текущий UI его не использует.
+
 **Дополнительные индексы миграции**:
 - `dictionary_entries_user_languages_idx` (комбинация user + языков)
 - `dictionary_entries_created_at_desc_idx` (сортировка по дате)
-- `dictionary_entries_difficulty_idx` (частичный индекс по сложности)
+- `dictionary_entries_difficulty_idx` (частичный индекс по сложности, не задействован сейчас)
 - `dictionary_entries_last_reviewed_desc_idx` (частичный индекс по повторениям)
 
 **Использование**:

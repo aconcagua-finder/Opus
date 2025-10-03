@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
         translation: validatedData.translation,
         targetLanguage: validatedData.targetLanguage,
         notes: validatedData.notes,
-        difficulty: validatedData.difficulty || 0,
       }
     })
 

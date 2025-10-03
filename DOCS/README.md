@@ -107,7 +107,7 @@
 4. **Персональный словарь**:
    - CRUD API `/api/dictionary`, `/api/dictionary/[id]`, `/api/dictionary/stats`
    - Валидация через Zod и защита middleware
-   - Индексы для фильтрации по языкам, сложности и дате
+   - Индексы для фильтрации по языкам и дате
 
 ## Запуск проекта
 
@@ -149,6 +149,10 @@ NEXTAUTH_SECRET="your-nextauth-secret-key"
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# OpenAI (AI импорт словаря)
+OPENAI_API_KEY="your-openai-api-key"
+OPENAI_DICTIONARY_MODEL="gpt-4.1-mini" # optional override
 ```
 
 ## Реализованный функционал
@@ -194,8 +198,8 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 **Функции**:
 - Пагинация, фильтрация по языкам и поиск по тексту
 - Форма добавления с валидацией Zod и выбором языков
-- Карточка слова с переключением слово/перевод и счётчиками
-- Автоматические индикаторы сложности и метрики просмотров
+- Карточка слова с переключением слово/перевод, заметками и счётчиками
+- ИИ-импорт: кнопка «Добавить список слов (ИИ)» анализирует текст (до 2 МБ) через OpenAI и подготавливает список для сохранения
 
 ### UI компоненты ✅
 

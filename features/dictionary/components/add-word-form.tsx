@@ -24,7 +24,6 @@ interface AddWordFormProps {
 type FormPreferences = {
   sourceLanguage: Language
   targetLanguage: Language
-  difficulty: number
 }
 
 const FORM_PREFERENCES_KEY = 'dictionary-form-preferences-v1'
@@ -52,7 +51,6 @@ const loadPreferences = (userId?: string): FormPreferences | null => {
     return {
       sourceLanguage: stored.sourceLanguage,
       targetLanguage: stored.targetLanguage,
-      difficulty: typeof stored.difficulty === 'number' ? stored.difficulty : 0,
     }
   } catch (error) {
     console.warn('Failed to load dictionary preferences', error)
@@ -129,7 +127,6 @@ export function AddWordForm({
         notes: entry.notes ?? '',
         sourceLanguage: entry.sourceLanguage,
         targetLanguage: entry.targetLanguage,
-        difficulty: entry.difficulty ?? 0,
       }
     }
 
@@ -145,7 +142,6 @@ export function AddWordForm({
       notes: '',
       sourceLanguage: fallbackSource,
       targetLanguage: fallbackTarget,
-      difficulty: preferences?.difficulty ?? 0,
     }
   }, [isEditMode, entry, preferences])
 
@@ -173,7 +169,6 @@ export function AddWordForm({
 
   const sourceLanguage = watch('sourceLanguage')
   const targetLanguage = watch('targetLanguage')
-  const difficultyValue = watch('difficulty') ?? 0
 
   useEffect(() => {
     if (isEditMode || !userId || !preferencesReady) {
@@ -187,9 +182,8 @@ export function AddWordForm({
     savePreferences(userId, {
       sourceLanguage,
       targetLanguage,
-      difficulty: typeof difficultyValue === 'number' ? difficultyValue : 0,
     })
-  }, [isEditMode, userId, preferencesReady, sourceLanguage, targetLanguage, difficultyValue])
+  }, [isEditMode, userId, preferencesReady, sourceLanguage, targetLanguage])
 
   const handleCancel = () => {
     clearErrorRef.current?.()
@@ -217,7 +211,6 @@ export function AddWordForm({
           notes: '',
           sourceLanguage: data.sourceLanguage,
           targetLanguage: data.targetLanguage,
-          difficulty: data.difficulty ?? 0,
         })
       }
 
@@ -313,30 +306,6 @@ export function AddWordForm({
           <p className="mt-1 text-sm text-red-400">{errors.notes.message}</p>
         )}
       </div>
-
-      {/* Сложность */}
-      <div>
-        <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Сложность (0-5)
-        </label>
-        <select
-          {...register('difficulty', { 
-            setValueAs: (value) => value ? parseInt(value) : 0 
-          })}
-          className="flex h-10 w-full rounded-md bg-zinc-950/50 backdrop-blur-md border border-white/20 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
-        >
-          <option value={0} className="bg-zinc-900">0 - Легкое</option>
-          <option value={1} className="bg-zinc-900">1 - Простое</option>
-          <option value={2} className="bg-zinc-900">2 - Среднее</option>
-          <option value={3} className="bg-zinc-900">3 - Сложное</option>
-          <option value={4} className="bg-zinc-900">4 - Очень сложное</option>
-          <option value={5} className="bg-zinc-900">5 - Экстремальное</option>
-        </select>
-        {errors.difficulty && (
-          <p className="mt-1 text-sm text-red-400">{errors.difficulty.message}</p>
-        )}
-      </div>
-
       {/* Кнопки */}
       <div className="flex items-center justify-end space-x-3 pt-4">
         {onCancel && (
@@ -370,7 +339,7 @@ export function AddWordForm({
     <Card className={`bg-zinc-950/50 border-zinc-800/50 backdrop-blur ${isEditMode ? 'border-cyan-600/40 shadow-[0_0_20px_rgba(8,145,178,0.25)]' : ''}`}>
       <CardHeader>
         <CardTitle className="text-white">
-          {isEditMode ? 'Редактировать слово' : 'Добавить новое слово'}
+          {isEditMode ? 'Редактировать слово' : 'Добавить слово (вручную)'}
         </CardTitle>
       </CardHeader>
       <CardContent>

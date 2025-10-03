@@ -3,7 +3,8 @@ import {
   CreateDictionaryEntryData, 
   UpdateDictionaryEntryData,
   DictionaryFilters,
-  DictionaryStats
+  DictionaryStats,
+  Language
 } from '../types'
 
 const API_BASE = '/api/dictionary'
@@ -40,6 +41,19 @@ export interface DictionaryAPI {
 
   // Получение статистики
   getStats: () => Promise<DictionaryStats>
+
+  // Генерация слов с помощью ИИ
+  generateEntries: (payload: {
+    text: string
+    sourceLanguage: Language
+    targetLanguage: Language
+  }) => Promise<CreateDictionaryEntryData[]>
+
+  // Массовое сохранение записей
+  importEntries: (entries: CreateDictionaryEntryData[]) => Promise<{
+    created: number
+    skipped: number
+  }>
 }
 
 const buildQueryParams = (params: Record<string, any>): string => {
@@ -142,6 +156,41 @@ export const dictionaryAPI: DictionaryAPI = {
       throw new Error(error.error || 'Failed to fetch dictionary stats')
     }
     
+    return response.json()
+  },
+
+  async generateEntries(payload) {
+    const response = await fetch(`${API_BASE}/ai/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.error || 'Не удалось сгенерировать список слов')
+    }
+
+    const data = await response.json()
+    return (data.entries ?? []) as CreateDictionaryEntryData[]
+  },
+
+  async importEntries(entries) {
+    const response = await fetch(`${API_BASE}/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ entries }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.error || 'Не удалось сохранить список слов')
+    }
+
     return response.json()
   }
 }

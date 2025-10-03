@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/features/auth'
 import { useSession } from 'next-auth/react'
-import { DictionaryList, AddWordForm, useDictionary, getLanguageFlag, Language } from '@/features/dictionary'
+import { DictionaryList, AddWordForm, useDictionary, getLanguageFlag, Language, AiImportPanel } from '@/features/dictionary'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProtectedNav } from '@/components/navigation/protected-nav'
@@ -16,7 +16,8 @@ export default function DictionaryPage() {
   const { stats, entries } = useDictionary()
   
   const [mounted, setMounted] = useState(false)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [showManualForm, setShowManualForm] = useState(false)
+  const [showAiPanel, setShowAiPanel] = useState(false)
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,7 +58,8 @@ export default function DictionaryPage() {
 
   const handleEditWord = (id: string) => {
     setEditingEntryId(id)
-    setShowAddForm(false)
+    setShowManualForm(false)
+    setShowAiPanel(false)
   }
 
   const handleEditComplete = () => {
@@ -180,24 +182,51 @@ export default function DictionaryPage() {
         )}
 
         {/* Add Word Button */}
-        <div className="mb-6 flex justify-between items-center">
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div></div>
-          <Button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white"
-          >
-            {showAddForm ? 'Скрыть форму' : '+ Добавить слово'}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => {
+                setShowManualForm((prev) => {
+                  const next = !prev
+                  if (next) setShowAiPanel(false)
+                  return next
+                })
+              }}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            >
+              {showManualForm ? 'Скрыть форму' : '+ Добавить слово (вручную)'}
+            </Button>
+            <Button
+              variant={showAiPanel ? 'default' : 'outline'}
+              onClick={() => {
+                setShowAiPanel((prev) => {
+                  const next = !prev
+                  if (next) setShowManualForm(false)
+                  return next
+                })
+              }}
+              className={showAiPanel ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}
+            >
+              {showAiPanel ? 'Скрыть окно' : 'Добавить список слов (ИИ)'}
+            </Button>
+          </div>
         </div>
 
         {/* Add Word Form */}
-        {showAddForm && (
+        {showManualForm && (
           <div className="mb-8">
             <AddWordForm 
               userId={userId}
-              onSuccess={() => setShowAddForm(false)}
-              onCancel={() => setShowAddForm(false)}
+              onSuccess={() => setShowManualForm(false)}
+              onCancel={() => setShowManualForm(false)}
             />
+          </div>
+        )}
+
+        {showAiPanel && (
+          <div className="mb-8">
+            <AiImportPanel onClose={() => setShowAiPanel(false)} />
           </div>
         )}
 

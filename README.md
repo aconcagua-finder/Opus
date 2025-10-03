@@ -156,6 +156,11 @@ NEXTAUTH_SECRET="your-nextauth-secret-key"
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# OpenAI (AI импортер словаря)
+OPENAI_API_KEY="your-openai-api-key"
+# Опционально: переопределить модель (по умолчанию gpt-5-mini)
+OPENAI_DICTIONARY_MODEL="gpt-5-mini"
 ```
 
 **Примечание**: При использовании Docker переменные окружения настроены автоматически.
@@ -194,8 +199,9 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 - `/dictionary` — персональный словарь с CRUD и статистикой
 - API: `GET/POST /api/dictionary`, `GET/PUT/DELETE /api/dictionary/:id`, `GET /api/dictionary/stats`
-- Форма запоминает последние выбранные языки и сложность, поддерживается редактирование записей
-- Фильтры, пагинация и карточки слов с индикатором сложности
+- Форма запоминает последние выбранные языки, поддерживается редактирование записей
+- Фильтры, пагинация и карточки слов с заметками
+- ИИ-импорт: «Добавить список слов (ИИ)» формирует предложения из произвольного текста через OpenAI (до 2 МБ)
 
 ### UI компоненты ✅
 

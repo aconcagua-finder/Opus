@@ -29,6 +29,7 @@ export const useDictionary = () => {
     createEntry: store.createEntry,
     updateEntry: store.updateEntry,
     deleteEntry: store.deleteEntry,
+    importEntries: store.importEntries,
     refreshEntries: store.refreshEntries,
     fetchEntries: store.fetchEntries,
     clearError: () => store.setError(null),

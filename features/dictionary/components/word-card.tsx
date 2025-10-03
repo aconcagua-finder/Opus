@@ -76,13 +76,6 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCa
           {showActions && (
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800">
               <div className="flex items-center space-x-2">
-                {entry.difficulty !== undefined && entry.difficulty > 0 && (
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: entry.difficulty }, (_, i) => (
-                      <div key={i} className="w-2 h-2 bg-cyan-500 rounded-full"></div>
-                    ))}
-                  </div>
-                )}
                 <span className="text-xs text-zinc-500">
                   {new Date(entry.createdAt).toLocaleDateString()}
                 </span>
