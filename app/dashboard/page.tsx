@@ -8,6 +8,8 @@ import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProtectedNav } from '@/components/navigation/protected-nav'
+import { useDictionaryStore } from '@/features/dictionary/stores/dictionary-store'
+import { getLanguageFlag, Language } from '@/features/dictionary'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -26,6 +28,19 @@ export default function DashboardPage() {
   
   const nextAuthUser = nextAuthSession?.user
   const user = nextAuthUser || jwtUser
+  const displayName = (
+    (user && 'displayName' in user && user.displayName) ||
+    (user && 'name' in user && user.name) ||
+    (user && 'username' in user && (user as any).username) ||
+    user?.email?.split('@')[0] ||
+    'Пользователь'
+  )
+
+  const dictionaryStats = useDictionaryStore((state) => state.stats)
+  const fetchDictionaryStats = useDictionaryStore((state) => state.fetchStats)
+  const topLanguageEntry = dictionaryStats
+    ? Object.entries(dictionaryStats.entriesByLanguage).sort(([, a], [, b]) => b - a)[0] ?? null
+    : null
   
   // Logout function that handles both systems
   useEffect(() => {
@@ -33,6 +48,12 @@ export default function DashboardPage() {
       router.push('/login')
     }
   }, [user, isLoading, router, mounted])
+
+  useEffect(() => {
+    if (!dictionaryStats) {
+      fetchDictionaryStats()
+    }
+  }, [dictionaryStats, fetchDictionaryStats])
 
   if (!mounted || isLoading) {
     return (
@@ -54,21 +75,81 @@ export default function DashboardPage() {
       <main className="relative z-10 container mx-auto px-4 py-6 sm:py-12">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent mb-2">
-            Добро пожаловать обратно, {('displayName' in user ? user.displayName : user.name) || ('username' in user ? user.username : undefined) || user.email?.split('@')[0] || 'Пользователь'}!
+            Обзор
           </h1>
           <p className="text-zinc-500 text-sm sm:text-base">
-            Вот что происходит с вашим аккаунтом сегодня.
+            Привет, {displayName}! Ниже — сводка по вашим прогрессам.
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
+        <section className="mb-10">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 sm:gap-5">
+            <Card className="bg-zinc-950/60 border-zinc-800/60 backdrop-blur">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-400">Всего слов</CardTitle>
+                <svg className="h-4 w-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253в13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253м0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253в13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-white">{dictionaryStats?.totalEntries ?? 0}</div>
+                <p className="text-xs text-zinc-500">слов в вашем словаре</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-zinc-950/60 border-zinc-800/60 backdrop-blur">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-400">Недавно добавлено</CardTitle>
+                <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-white">{dictionaryStats?.recentlyAdded ?? 0}</div>
+                <p className="text-xs text-zinc-500">слов за последнюю неделю</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-zinc-950/60 border-zinc-800/60 backdrop-blur">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-400">Нужно повторить</CardTitle>
+                <svg className="h-4 w-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-white">{dictionaryStats?.needsReview ?? 0}</div>
+                <p className="text-xs text-zinc-500">слов ждут повторения</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-zinc-950/60 border-zinc-800/60 backdrop-blur">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-400">Самый изучаемый язык</CardTitle>
+                <svg className="h-4 w-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold text-white">
+                  {topLanguageEntry ? getLanguageFlag(topLanguageEntry[0] as Language) : '🌐'}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {topLanguageEntry ? topLanguageEntry[1] : 0} слов
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Account Highlights */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
           <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur hover:border-cyan-900/50 transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400">
                 Статус аккаунта
               </CardTitle>
-              <div className="h-8 w-8 rounded-lg "></div>
+              <div className="h-8 w-8 rounded-lg"></div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">Активен</div>
@@ -83,7 +164,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-zinc-400">
                 Последний вход
               </CardTitle>
-              <div className="h-8 w-8 rounded-lg "></div>
+              <div className="h-8 w-8 rounded-lg"></div>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
               <div className="text-xl sm:text-2xl font-bold text-white">Сегодня</div>
@@ -98,7 +179,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-zinc-400">
                 Уровень безопасности
               </CardTitle>
-              <div className="h-8 w-8 rounded-lg "></div>
+              <div className="h-8 w-8 rounded-lg"></div>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
               <div className="text-xl sm:text-2xl font-bold text-white">Отличный</div>
@@ -107,7 +188,8 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-        </div>
+        </section>
+
 
         {/* Recent Activity */}
         <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">

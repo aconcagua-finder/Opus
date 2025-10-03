@@ -9,7 +9,41 @@ import {
   CreateDictionaryEntryData,
   UpdateDictionaryEntryData 
 } from '../types'
-import { dictionaryAPI, PaginatedResponse } from '../api/dictionary'
+import { dictionaryAPI } from '../api/dictionary'
+
+const DEFAULT_PAGE_SIZE = 50
+
+const mergeEntries = (
+  current: DictionaryEntry[],
+  incoming: DictionaryEntry[]
+): DictionaryEntry[] => {
+  if (current.length === 0) {
+    return incoming
+  }
+
+  const order: string[] = []
+  const existingMap = new Map<string, DictionaryEntry>()
+
+  const orderSet = new Set<string>()
+
+  current.forEach((entry) => {
+    order.push(entry.id)
+    orderSet.add(entry.id)
+    existingMap.set(entry.id, entry)
+  })
+
+  incoming.forEach((entry) => {
+    if (!orderSet.has(entry.id)) {
+      order.push(entry.id)
+      orderSet.add(entry.id)
+    }
+    existingMap.set(entry.id, entry)
+  })
+
+  return order
+    .map((id) => existingMap.get(id))
+    .filter((entry): entry is DictionaryEntry => Boolean(entry))
+}
 
 interface DictionaryStore {
   // State
@@ -53,7 +87,7 @@ export const useDictionaryStore = create<DictionaryStore>()(
 
       // Basic actions
       setFilters: (filters: DictionaryFilters) => {
-        set({ filters })
+        set({ filters, entries: [], pagination: null })
         // Автоматически перезагружаем данные при смене фильтров
         get().fetchEntries(1)
       },
@@ -63,8 +97,10 @@ export const useDictionaryStore = create<DictionaryStore>()(
       setError: (error: string | null) => set({ error }),
 
       // API actions
-      fetchEntries: async (page = 1, limit = 20) => {
+      fetchEntries: async (page = 1, limit = DEFAULT_PAGE_SIZE) => {
         const { filters } = get()
+
+        const effectiveLimit = limit ?? DEFAULT_PAGE_SIZE
         
         set({ isLoading: true, error: null })
         
@@ -72,14 +108,16 @@ export const useDictionaryStore = create<DictionaryStore>()(
           const response = await dictionaryAPI.getEntries({
             filters,
             page,
-            limit
+            limit: effectiveLimit
           })
-          
-          set({
-            entries: response.entries,
+
+          set((state) => ({
+            entries: page > 1
+              ? mergeEntries(state.entries, response.entries)
+              : response.entries,
             pagination: response.pagination,
             isLoading: false
-          })
+          }))
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch entries',
@@ -164,11 +202,20 @@ export const useDictionaryStore = create<DictionaryStore>()(
       },
 
       refreshEntries: async () => {
-        const { pagination } = get()
-        const currentPage = pagination?.page || 1
-        const currentLimit = pagination?.limit || 20
-        
-        await get().fetchEntries(currentPage, currentLimit)
+        const { pagination, entries } = get()
+        const effectiveLimit = pagination?.limit ?? DEFAULT_PAGE_SIZE
+        const loadedPages = entries.length > 0
+          ? Math.ceil(entries.length / effectiveLimit)
+          : 1
+
+        await get().fetchEntries(1, effectiveLimit)
+
+        const totalPages = get().pagination?.pages ?? 1
+        const pagesToFetch = Math.min(totalPages, loadedPages)
+
+        for (let page = 2; page <= pagesToFetch; page++) {
+          await get().fetchEntries(page, effectiveLimit)
+        }
       },
 
       importEntries: async (entries: CreateDictionaryEntryData[]) => {

@@ -4,10 +4,17 @@ export type {
   CreateDictionaryEntryData,
   UpdateDictionaryEntryData,
   DictionaryFilters,
-  DictionaryStats
+  DictionaryStats,
+  DictionaryDisplayPreferences
 } from './types'
 
-export { Language, LANGUAGE_NAMES, LANGUAGE_FLAGS } from './types'
+export { 
+  Language, 
+  LANGUAGE_NAMES, 
+  LANGUAGE_FLAGS,
+  DictionaryViewMode,
+  DictionaryListContentMode
+} from './types'
 
 // API
 export { AVAILABLE_LANGUAGES, getLanguageLabel, getLanguageFlag, getLanguageOption } from './api/languages'
@@ -30,7 +37,8 @@ export {
   useDictionary, 
   useDictionaryPagination, 
   useDictionaryFilters, 
-  useDictionaryEntry 
+  useDictionaryEntry,
+  useDictionaryPreferences
 } from './hooks/use-dictionary'
 
 // Components

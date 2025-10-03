@@ -70,7 +70,7 @@ const buildQueryParams = (params: Record<string, any>): string => {
 
 export const dictionaryAPI: DictionaryAPI = {
   async getEntries(params = {}) {
-    const { filters = {}, page = 1, limit = 20 } = params
+    const { filters = {}, page = 1, limit = 50 } = params
     
     const queryParams = buildQueryParams({
       ...filters,

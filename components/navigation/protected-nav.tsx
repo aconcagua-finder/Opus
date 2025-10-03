@@ -13,8 +13,8 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { href: '/dashboard', label: 'Панель управления' },
   { href: '/dictionary', label: '📚 Словарь' },
+  { href: '/dashboard', label: 'Обзор' },
   { href: '/settings', label: 'Настройки' },
   { href: '/profile', label: 'Профиль' },
 ]

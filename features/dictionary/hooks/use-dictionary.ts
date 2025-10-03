@@ -1,8 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useDictionaryStore } from '../stores/dictionary-store'
-import { DictionaryFilters, CreateDictionaryEntryData, UpdateDictionaryEntryData } from '../types'
+import { useDictionaryPreferencesStore } from '../stores/dictionary-preferences-store'
+import {
+  DictionaryFilters,
+  CreateDictionaryEntryData,
+  UpdateDictionaryEntryData
+} from '../types'
 
 export const useDictionary = () => {
   const store = useDictionaryStore()
@@ -42,40 +47,29 @@ export const useDictionary = () => {
 
 // Хук для работы с пагинацией
 export const useDictionaryPagination = () => {
-  const { pagination, fetchEntries, isLoading } = useDictionary()
+  const { pagination, fetchEntries, isLoading, entries } = useDictionary()
 
-  const goToPage = async (page: number) => {
-    if (!pagination || isLoading) return
-    
-    const limit = pagination.limit
-    await fetchEntries(page, limit)
-  }
+  const canLoadMore = Boolean(
+    pagination && entries.length < pagination.total && pagination.page < pagination.pages
+  )
 
-  const nextPage = async () => {
-    if (!pagination || isLoading) return
-    
-    const nextPageNum = pagination.page + 1
-    if (nextPageNum <= pagination.pages) {
-      await goToPage(nextPageNum)
-    }
-  }
+  const loadMore = useCallback(async () => {
+    if (!pagination || isLoading || !canLoadMore) return
 
-  const prevPage = async () => {
+    const nextPage = pagination.page + 1
+    await fetchEntries(nextPage, pagination.limit)
+  }, [pagination, isLoading, canLoadMore, fetchEntries])
+
+  const resetToStart = useCallback(async () => {
     if (!pagination || isLoading) return
-    
-    const prevPageNum = pagination.page - 1
-    if (prevPageNum >= 1) {
-      await goToPage(prevPageNum)
-    }
-  }
+    await fetchEntries(1, pagination.limit)
+  }, [pagination, isLoading, fetchEntries])
 
   return {
     pagination,
-    goToPage,
-    nextPage,
-    prevPage,
-    canGoNext: pagination ? pagination.page < pagination.pages : false,
-    canGoPrev: pagination ? pagination.page > 1 : false,
+    loadMore,
+    resetToStart,
+    canLoadMore,
     isLoading,
   }
 }
@@ -137,4 +131,8 @@ export const useDictionaryEntry = (entryId?: string) => {
     delete: handleDelete,
     exists: !!entry,
   }
+}
+
+export const useDictionaryPreferences = () => {
+  return useDictionaryPreferencesStore()
 }

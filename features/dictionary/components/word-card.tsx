@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { DictionaryEntry } from '../types'
-import { getLanguageFlag, getLanguageLabel } from '../api/languages'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -11,16 +10,12 @@ interface WordCardProps {
   onEdit?: (entry: DictionaryEntry) => void
   onDelete?: (entry: DictionaryEntry) => void
   showActions?: boolean
+  showNotes?: boolean
 }
 
-export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCardProps) {
+export function WordCard({ entry, onEdit, onDelete, showActions = true, showNotes = true }: WordCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-
-  const sourceFlag = getLanguageFlag(entry.sourceLanguage)
-  const targetFlag = getLanguageFlag(entry.targetLanguage)
-  const sourceLabel = getLanguageLabel(entry.sourceLanguage)
-  const targetLabel = getLanguageLabel(entry.targetLanguage)
 
   const handleDeleteClick = () => {
     if (showDeleteConfirm) {
@@ -43,10 +38,7 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCa
           {!isFlipped ? (
             // Front side - показываем слово
             <div className="text-center">
-              <div className="text-xs text-zinc-500 mb-2">
-                {sourceFlag} {sourceLabel}
-              </div>
-              <div className="text-2xl font-semibold text-white mb-2 break-words">
+              <div className="mb-2 text-2xl font-semibold text-white break-words">
                 {entry.word}
               </div>
               <div className="text-xs text-zinc-400">
@@ -56,13 +48,10 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCa
           ) : (
             // Back side - показываем перевод
             <div className="text-center">
-              <div className="text-xs text-zinc-500 mb-2">
-                {targetFlag} {targetLabel}
-              </div>
-              <div className="text-xl font-medium text-cyan-300 mb-2 break-words">
+              <div className="mb-2 text-xl font-medium text-cyan-300 break-words">
                 {entry.translation}
               </div>
-              {entry.notes && (
+              {showNotes && entry.notes && (
                 <div className="text-sm text-zinc-400 italic">
                   {entry.notes}
                 </div>
@@ -86,7 +75,10 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCa
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEdit(entry)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onEdit?.(entry)
+                    }}
                     className="h-7 w-7 p-0 text-zinc-400 hover:text-cyan-400"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +91,10 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true }: WordCa
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleDeleteClick}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleDeleteClick()
+                    }}
                     className={`h-7 w-7 p-0 transition-colors ${
                       showDeleteConfirm 
                         ? 'text-red-400 hover:text-red-300' 

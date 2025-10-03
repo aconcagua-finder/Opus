@@ -59,6 +59,24 @@ export interface DictionaryStats {
   needsReview: number
 }
 
+export enum DictionaryViewMode {
+  CARDS = 'CARDS',
+  LIST = 'LIST'
+}
+
+export enum DictionaryListContentMode {
+  FULL = 'FULL',
+  SOURCE_ONLY = 'SOURCE_ONLY',
+  TRANSLATION_ONLY = 'TRANSLATION_ONLY'
+}
+
+export interface DictionaryDisplayPreferences {
+  viewMode: DictionaryViewMode
+  listContentMode: DictionaryListContentMode
+  showNotes: boolean
+  filtersPanelCollapsed: boolean
+}
+
 export const LANGUAGE_NAMES: Record<Language, string> = {
   [Language.SPANISH]: 'Испанский',
   [Language.ENGLISH]: 'Английский',
