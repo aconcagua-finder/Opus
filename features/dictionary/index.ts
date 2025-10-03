@@ -5,15 +5,22 @@ export type {
   UpdateDictionaryEntryData,
   DictionaryFilters,
   DictionaryStats,
-  DictionaryDisplayPreferences
+  DictionaryDisplayPreferences,
+  WordList,
+  WordListItem,
+  CreateWordListData,
+  UpdateWordListData
 } from './types'
 
-export { 
-  Language, 
-  LANGUAGE_NAMES, 
+export {
+  Language,
+  LANGUAGE_NAMES,
   LANGUAGE_FLAGS,
   DictionaryViewMode,
-  DictionaryListContentMode
+  DictionaryListContentMode,
+  WordListType,
+  WORD_LIST_TYPE_NAMES,
+  WORD_LIST_TYPE_ICONS
 } from './types'
 
 // API
@@ -33,13 +40,15 @@ export type {
 } from './utils/validation'
 
 // Hooks
-export { 
-  useDictionary, 
-  useDictionaryPagination, 
-  useDictionaryFilters, 
+export {
+  useDictionary,
+  useDictionaryPagination,
+  useDictionaryFilters,
   useDictionaryEntry,
   useDictionaryPreferences
 } from './hooks/use-dictionary'
+
+export { useWordLists } from './hooks/use-word-lists'
 
 // Components
 export { DictionaryList } from './components/dictionary-list'

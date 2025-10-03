@@ -50,6 +50,7 @@ export interface DictionaryFilters {
   sourceLanguage?: Language
   targetLanguage?: Language
   search?: string
+  listId?: string // Фильтрация по списку
 }
 
 export interface DictionaryStats {
@@ -87,4 +88,59 @@ export const LANGUAGE_FLAGS: Record<Language, string> = {
   [Language.SPANISH]: '🇪🇸',
   [Language.ENGLISH]: '🇺🇸',
   [Language.RUSSIAN]: '🇷🇺'
+}
+
+// Word Lists Types
+export enum WordListType {
+  CUSTOM = 'CUSTOM',
+  AUTO_7_DAYS = 'AUTO_7_DAYS',
+  AUTO_14_DAYS = 'AUTO_14_DAYS',
+  AUTO_28_DAYS = 'AUTO_28_DAYS'
+}
+
+export interface WordList {
+  id: string
+  userId: string
+  name: string
+  type: WordListType
+  description?: string
+  color?: string
+  isArchived: boolean
+  createdAt: Date
+  updatedAt: Date
+  wordCount?: number // Виртуальное поле - количество слов в списке
+}
+
+export interface WordListItem {
+  id: string
+  listId: string
+  entryId: string
+  addedAt: Date
+}
+
+export interface CreateWordListData {
+  name: string
+  description?: string
+  color?: string
+}
+
+export interface UpdateWordListData {
+  name?: string
+  description?: string
+  color?: string
+  isArchived?: boolean
+}
+
+export const WORD_LIST_TYPE_NAMES: Record<WordListType, string> = {
+  [WordListType.CUSTOM]: 'Пользовательский',
+  [WordListType.AUTO_7_DAYS]: 'Последние 7 дней',
+  [WordListType.AUTO_14_DAYS]: 'Последние 14 дней',
+  [WordListType.AUTO_28_DAYS]: 'Последние 28 дней'
+}
+
+export const WORD_LIST_TYPE_ICONS: Record<WordListType, string> = {
+  [WordListType.CUSTOM]: '📋',
+  [WordListType.AUTO_7_DAYS]: '🔥',
+  [WordListType.AUTO_14_DAYS]: '⭐',
+  [WordListType.AUTO_28_DAYS]: '📅'
 }

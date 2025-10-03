@@ -41,7 +41,8 @@ model User {
   authAttempts              AuthAttempt[]
   accounts                  Account[]
   dictionaryEntries         DictionaryEntry[]
-  
+  wordLists                 WordList[]
+
   @@map("users")
   @@index([email])
   @@index([username])
@@ -169,7 +170,8 @@ model DictionaryEntry {
   
   // Связи
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  wordListItems WordListItem[]
+
   @@map("dictionary_entries")
   @@index([userId])
   @@index([sourceLanguage])
@@ -179,8 +181,57 @@ model DictionaryEntry {
   @@index([userId, word])
 }
 
+// Word Lists Models
+model WordList {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  name        String
+  type        WordListType @default(CUSTOM)
+  description String?
+  color       String?
+  isArchived  Boolean      @default(false) @map("is_archived")
+
+  // Timestamps
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordListItems WordListItem[]
+
+  @@map("word_lists")
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, isArchived])
+}
+
+model WordListItem {
+  id      String   @id @default(uuid())
+  listId  String   @map("list_id")
+  entryId String   @map("entry_id")
+
+  // Timestamp
+  addedAt DateTime @default(now()) @map("added_at")
+
+  // Relations
+  list  WordList        @relation(fields: [listId], references: [id], onDelete: Cascade)
+  entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, entryId])
+  @@map("word_list_items")
+  @@index([listId])
+  @@index([entryId])
+}
+
 enum Language {
   SPANISH
   ENGLISH
   RUSSIAN
+}
+
+enum WordListType {
+  CUSTOM
+  AUTO_7_DAYS
+  AUTO_14_DAYS
+  AUTO_28_DAYS
 }
