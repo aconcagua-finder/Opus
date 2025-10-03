@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
       sourceLanguage: searchParams.get('sourceLanguage') || undefined,
       targetLanguage: searchParams.get('targetLanguage') || undefined,
       search: searchParams.get('search') || undefined,
+      listId: searchParams.get('listId') || undefined,
     }
 
     // Валидация фильтров
@@ -42,6 +43,34 @@ export async function GET(request: NextRequest) {
         { word: { contains: searchTerm, mode: 'insensitive' } },
         { translation: { contains: searchTerm, mode: 'insensitive' } }
       ]
+    }
+
+    // Фильтрация по списку
+    if (validatedFilters.listId) {
+      if (validatedFilters.listId.startsWith('auto-')) {
+        // Для авто-списков - фильтруем по дате
+        const now = new Date()
+        let dateFilter: Date
+
+        if (validatedFilters.listId === 'auto-7-days') {
+          dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        } else if (validatedFilters.listId === 'auto-14-days') {
+          dateFilter = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+        } else if (validatedFilters.listId === 'auto-28-days') {
+          dateFilter = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
+        }
+
+        if (dateFilter!) {
+          where.createdAt = { gte: dateFilter }
+        }
+      } else {
+        // Для кастомных списков - используем связь wordListItems
+        where.wordListItems = {
+          some: {
+            listId: validatedFilters.listId
+          }
+        }
+      }
     }
 
     // Пагинация

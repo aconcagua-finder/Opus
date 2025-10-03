@@ -50,7 +50,8 @@ export const updateDictionaryEntrySchema = z.object({
 export const dictionaryFiltersSchema = z.object({
   sourceLanguage: z.nativeEnum(Language).optional(),
   targetLanguage: z.nativeEnum(Language).optional(),
-  search: z.string().trim().optional()
+  search: z.string().trim().optional(),
+  listId: z.string().optional()
 })
 
 export type CreateDictionaryEntryInput = z.infer<typeof createDictionaryEntrySchema>

@@ -7,6 +7,7 @@ import {
   useDictionaryFilters,
   useDictionaryPreferences
 } from '../hooks/use-dictionary'
+import { useWordLists } from '../hooks/use-word-lists'
 import {
   DictionaryEntry,
   DictionaryListContentMode,
@@ -15,9 +16,12 @@ import {
 import { WordCard } from './word-card'
 import { LanguageSelector } from './language-selector'
 import { WordListItem } from './word-list-item'
+import { WordListsPanel } from './word-lists-panel'
+import { WordListManager } from './word-list-manager'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Modal } from '@/components/ui/modal'
 
 interface DictionaryListProps {
   onEditWord?: (entry: DictionaryEntry) => void
@@ -38,11 +42,18 @@ export function DictionaryList({ onEditWord }: DictionaryListProps) {
     setFiltersPanelCollapsed,
     resetDefaults
   } = useDictionaryPreferences()
+  const { activeListId } = useWordLists()
 
   const [searchInput, setSearchInput] = useState(filters.search || '')
+  const [showListManager, setShowListManager] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const isListView = viewMode === DictionaryViewMode.LIST
+
+  // Синхронизируем активный список с фильтрами
+  useEffect(() => {
+    updateFilter('listId', activeListId || undefined)
+  }, [activeListId, updateFilter])
 
   const remainingCount = useMemo(() => {
     if (!pagination) return 0
@@ -364,6 +375,18 @@ export function DictionaryList({ onEditWord }: DictionaryListProps) {
 
   return (
     <div className="space-y-6">
+      {/* Модальное окно управления списками */}
+      {showListManager && (
+        <Modal open onClose={() => setShowListManager(false)}>
+          <WordListManager onClose={() => setShowListManager(false)} />
+        </Modal>
+      )}
+
+      {/* Панель списков */}
+      <WordListsPanel
+        onManageClick={() => setShowListManager(true)}
+      />
+
       {filtersPanelCollapsed ? collapsedFiltersPanel : filtersPanel}
 
       {isEmpty ? (

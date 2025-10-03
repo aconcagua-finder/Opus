@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { DictionaryEntry, DictionaryListContentMode } from '../types'
 import { Button } from '@/components/ui/button'
+import { AddToListButton } from './add-to-list-button'
 
 interface WordListItemProps {
   entry: DictionaryEntry
@@ -141,6 +142,8 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
         <div className="flex w-full flex-col gap-3 text-sm text-zinc-400 sm:w-auto sm:items-end">
           {showActions && (onEdit || onDelete) && (
             <div className="flex items-center justify-start gap-2 sm:justify-end">
+              <AddToListButton entryId={entry.id} compact />
+
               {onEdit && (
                 <Button
                   variant="ghost"

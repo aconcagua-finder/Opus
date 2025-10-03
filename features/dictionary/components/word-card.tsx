@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { DictionaryEntry } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { AddToListButton } from './add-to-list-button'
 
 interface WordCardProps {
   entry: DictionaryEntry
@@ -71,6 +72,8 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true, showNote
               </div>
               
               <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                <AddToListButton entryId={entry.id} compact />
+
                 {onEdit && (
                   <Button
                     variant="ghost"
@@ -86,7 +89,7 @@ export function WordCard({ entry, onEdit, onDelete, showActions = true, showNote
                     </svg>
                   </Button>
                 )}
-                
+
                 {onDelete && (
                   <Button
                     variant="ghost"
