@@ -13,7 +13,7 @@ export default function DictionaryPage() {
   const router = useRouter()
   const { user: jwtUser, isLoading: jwtLoading } = useAuth()
   const { data: nextAuthSession, status: nextAuthStatus } = useSession()
-  const { entries } = useDictionary()
+  const { entries, shuffleEntries, hasEntries } = useDictionary()
   
   const [mounted, setMounted] = useState(false)
   const [showManualForm, setShowManualForm] = useState(false)
@@ -116,12 +116,10 @@ export default function DictionaryPage() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent">
                 Мой словарь
               </h1>
-              <p className="text-zinc-500 text-sm sm:text-base">
-                Ваша персональная коллекция изученных слов и переводов
-              </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
+                variant="outline"
                 onClick={() => {
                   setShowManualForm((prev) => {
                     const next = !prev
@@ -129,12 +127,11 @@ export default function DictionaryPage() {
                     return next
                   })
                 }}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white"
               >
-                {showManualForm ? 'Скрыть форму' : '+ Добавить слово (вручную)'}
+                {showManualForm ? 'Скрыть форму' : 'Добавить слово (вручную)'}
               </Button>
               <Button
-                variant={showAiPanel ? 'default' : 'outline'}
+                variant="outline"
                 onClick={() => {
                   setShowAiPanel((prev) => {
                     const next = !prev
@@ -142,10 +139,17 @@ export default function DictionaryPage() {
                     return next
                   })
                 }}
-                className={showAiPanel ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}
               >
                 {showAiPanel ? 'Скрыть окно' : 'Добавить список слов (ИИ)'}
               </Button>
+              {hasEntries && entries.length > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => shuffleEntries()}
+                >
+                  Перемешать
+                </Button>
+              )}
             </div>
           </div>
 

@@ -72,6 +72,7 @@ interface DictionaryStore {
   deleteEntry: (id: string) => Promise<void>
   refreshEntries: () => Promise<void>
   importEntries: (entries: CreateDictionaryEntryData[]) => Promise<{ created: number; skipped: number }>
+  shuffleEntries: () => void
 }
 
 export const useDictionaryStore = create<DictionaryStore>()(
@@ -237,6 +238,21 @@ export const useDictionaryStore = create<DictionaryStore>()(
         } finally {
           set({ isLoading: false })
         }
+      },
+
+      shuffleEntries: () => {
+        set((state) => {
+          if (state.entries.length <= 1) return state
+
+          // Fisher-Yates shuffle algorithm
+          const shuffled = [...state.entries]
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+          }
+
+          return { entries: shuffled }
+        })
       }
     }),
     {

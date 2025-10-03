@@ -37,6 +37,7 @@ export const useDictionary = () => {
     importEntries: store.importEntries,
     refreshEntries: store.refreshEntries,
     fetchEntries: store.fetchEntries,
+    shuffleEntries: store.shuffleEntries,
     clearError: () => store.setError(null),
 
     // Computed values
