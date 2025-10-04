@@ -7,6 +7,38 @@ import {
 
 const API_BASE = '/api/word-lists'
 
+const extractErrorMessage = async (
+  response: Response,
+  options: {
+    unauthorized: string
+    fallback: string
+  }
+): Promise<string> => {
+  const { unauthorized, fallback } = options
+
+  const body = await response.json().catch(() => ({})) as {
+    error?: unknown
+    details?: Array<{ message?: string }>
+  }
+
+  if (Array.isArray(body?.details) && body.details.length > 0) {
+    const detailMessage = body.details.find((item) => typeof item?.message === 'string')?.message
+    if (detailMessage) {
+      return detailMessage
+    }
+  }
+
+  if (typeof body?.error === 'string' && body.error.trim().length > 0) {
+    return body.error.trim()
+  }
+
+  if (response.status === 401) {
+    return unauthorized
+  }
+
+  return fallback
+}
+
 export interface WordListsAPI {
   // Получение всех списков (кастомных + авто)
   getLists: (includeArchived?: boolean) => Promise<WordList[]>
@@ -74,8 +106,12 @@ export const wordListsAPI: WordListsAPI = {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create word list')
+      throw new Error(
+        await extractErrorMessage(response, {
+          unauthorized: 'Не удалось создать список: требуется авторизация',
+          fallback: 'Не удалось создать список. Попробуйте позже.'
+        })
+      )
     }
 
     return response.json()
@@ -91,8 +127,12 @@ export const wordListsAPI: WordListsAPI = {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update word list')
+      throw new Error(
+        await extractErrorMessage(response, {
+          unauthorized: 'Не удалось обновить список: требуется авторизация',
+          fallback: 'Не удалось обновить список. Попробуйте позже.'
+        })
+      )
     }
 
     return response.json()
@@ -104,8 +144,12 @@ export const wordListsAPI: WordListsAPI = {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete word list')
+      throw new Error(
+        await extractErrorMessage(response, {
+          unauthorized: 'Не удалось удалить список: требуется авторизация',
+          fallback: 'Не удалось удалить список. Попробуйте позже.'
+        })
+      )
     }
   },
 
@@ -119,8 +163,12 @@ export const wordListsAPI: WordListsAPI = {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to add entry to list')
+      throw new Error(
+        await extractErrorMessage(response, {
+          unauthorized: 'Не удалось добавить слово: требуется авторизация',
+          fallback: 'Не удалось добавить слово в список. Попробуйте позже.'
+        })
+      )
     }
   },
 
@@ -133,32 +181,24 @@ export const wordListsAPI: WordListsAPI = {
     )
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to remove entry from list')
+      throw new Error(
+        await extractErrorMessage(response, {
+          unauthorized: 'Не удалось удалить слово: требуется авторизация',
+          fallback: 'Не удалось удалить слово из списка. Попробуйте позже.'
+        })
+      )
     }
   },
 
   async getListsForEntry(entryId: string) {
-    // Получаем все списки и фильтруем те, в которых есть это слово
-    const allLists = await this.getLists()
+    const response = await fetch(`${API_BASE}/entries/${entryId}`)
 
-    // Для каждого кастомного списка проверяем наличие слова
-    const listsWithEntry: WordList[] = []
-
-    for (const list of allLists) {
-      // Авто-списки пропускаем, т.к. они динамические
-      if (list.id.startsWith('auto-')) continue
-
-      try {
-        const { entries } = await this.getList(list.id)
-        if (entries.some(e => e.id === entryId)) {
-          listsWithEntry.push(list)
-        }
-      } catch (err) {
-        console.error(`Failed to check list ${list.id}`, err)
-      }
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.error || 'Failed to fetch lists for entry')
     }
 
-    return listsWithEntry
+    const data = await response.json()
+    return data.lists as WordList[]
   }
 }

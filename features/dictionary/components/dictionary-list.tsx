@@ -52,8 +52,12 @@ export function DictionaryList({ onEditWord }: DictionaryListProps) {
 
   // Синхронизируем активный список с фильтрами
   useEffect(() => {
-    updateFilter('listId', activeListId || undefined)
-  }, [activeListId, updateFilter])
+    // Обновляем только если значение действительно изменилось
+    if (filters.listId !== activeListId) {
+      updateFilter('listId', activeListId || undefined)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeListId])
 
   const remainingCount = useMemo(() => {
     if (!pagination) return 0

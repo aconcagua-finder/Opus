@@ -12,6 +12,8 @@ export function useWordLists() {
     error,
     setActiveListId,
     fetchLists,
+    ensureLists,
+    refreshLists,
     createList,
     updateList,
     deleteList,
@@ -22,9 +24,8 @@ export function useWordLists() {
 
   // Автоматически загружаем списки при монтировании
   useEffect(() => {
-    if (lists.length === 0 && !isLoading) {
-      fetchLists()
-    }
+    ensureLists()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Разделяем списки на авто и кастомные
@@ -62,6 +63,8 @@ export function useWordLists() {
     // Actions
     setActiveListId,
     fetchLists,
+    ensureLists,
+    refreshLists,
     createList,
     updateList,
     deleteList,

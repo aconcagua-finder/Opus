@@ -33,11 +33,12 @@
   - Хуки: `useDictionary`, `useDictionaryPagination`, `useDictionaryFilters`, `useDictionaryEntry`
   - Zustand store: `useDictionaryStore`
   - Типы: `DictionaryEntry`, `Language`, DTO для создания/обновления, фильтры
-- **Таблицы БД**: `dictionary_entries`
+- **Таблицы БД**: `dictionary_entries`, `word_lists`, `word_list_items`
 - **Реализовано**:
   - ✅ CRUD API (`/api/dictionary`, `/api/dictionary/[id]`)
   - ✅ Аггрегированная статистика (`/api/dictionary/stats`)
   - ✅ UI: список слов, карточка, форма добавления, выбор языков
+  - ✅ Пользовательские списки слов с авто-списками за 7/14/28 дней, панелью управления и быстрым добавлением
 - ✅ Пагинация, фильтрация и поиск по тексту
 - ✅ Панель фильтров сворачивается, состояние сохраняется в настройках пользователя
   - ✅ Валидация через Zod
@@ -90,6 +91,9 @@
   - ✅ `GET /api/dictionary/stats` - словарная статистика
   - ✅ `POST /api/dictionary/ai/generate` - подготовка списка слов через OpenAI
   - ✅ `POST /api/dictionary/import` - массовое добавление слов
+  - ✅ `GET/POST /api/word-lists` - получение и создание списков
+  - ✅ `GET/PUT/DELETE /api/word-lists/:id` - управление конкретным списком
+  - ✅ `POST/DELETE /api/word-lists/:id/items` - добавление и удаление слов из списка
 - **Безопасность**:
   - Валидация входных данных
   - Rate limiting

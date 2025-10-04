@@ -1,10 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useWordLists } from '../hooks/use-word-lists'
+import { WordList } from '../types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
+const COLOR_PRESETS = [
+  '#06b6d4', // cyan-500
+  '#0ea5e9', // sky-500
+  '#22c55e', // green-500
+  '#84cc16', // lime-500
+  '#facc15', // yellow-400
+  '#f97316', // orange-500
+  '#ef4444', // red-500
+  '#a855f7'  // purple-500
+]
+
+const DEFAULT_COLOR = COLOR_PRESETS[0]
 
 interface WordListManagerProps {
   onClose: () => void
@@ -12,20 +26,166 @@ interface WordListManagerProps {
 
 export function WordListManager({ onClose }: WordListManagerProps) {
   const {
+    autoLists,
     customLists,
+    archivedLists,
     createList,
     updateList,
     deleteList,
     isLoading,
-    error
+    error,
+    ensureLists
   } = useWordLists()
-
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [color, setColor] = useState('#06b6d4')
+  const [color, setColor] = useState(DEFAULT_COLOR)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [localError, setLocalError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const load = async () => {
+      setLocalError(null)
+      await ensureLists(true)
+
+      if (cancelled) {
+        return
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [ensureLists])
+
+  const allCustomLists = useMemo(() => [...customLists, ...archivedLists], [customLists, archivedLists])
+
+  const availableColors = useMemo(() => {
+    if (color && !COLOR_PRESETS.includes(color)) {
+      return [color, ...COLOR_PRESETS.filter((preset) => preset !== color)]
+    }
+    return COLOR_PRESETS
+  }, [color])
+
+  const remoteError = useMemo(() => {
+    if (!error) return null
+    return error === 'Failed to fetch word lists' ? 'Не удалось загрузить списки слов' : error
+  }, [error])
+
+  const hasAnyLists = (autoLists.length + customLists.length + archivedLists.length) > 0
+  const displayedError = localError || (!hasAnyLists ? remoteError : null)
+
+  const renderListRow = (list: WordList) => {
+    const isDeleting = deletingId === list.id
+
+    return (
+      <div
+        key={list.id}
+        className={`flex items-center justify-between p-3 rounded-lg bg-zinc-950/50 border border-zinc-800 hover:border-zinc-700 transition-colors ${
+          list.isArchived ? 'opacity-70 hover:opacity-90' : ''
+        }`}
+        style={
+          list.color
+            ? {
+                borderLeftColor: list.color,
+                borderLeftWidth: '4px',
+                borderLeftStyle: 'solid'
+              }
+            : undefined
+        }
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="text-white font-medium truncate max-w-[200px] sm:max-w-[280px]">
+              {list.name}
+            </h4>
+            <span className="text-xs text-zinc-500 shrink-0">
+              {(list.wordCount ?? 0)} слов
+            </span>
+            {list.isArchived && (
+              <span className="inline-flex items-center rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] uppercase tracking-widest text-zinc-400">
+                Архив
+              </span>
+            )}
+          </div>
+          {list.description && (
+            <p className="text-sm text-zinc-400 truncate mt-1">
+              {list.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEdit(list.id)}
+            disabled={isLoading}
+            className="text-cyan-400 hover:text-cyan-300"
+          >
+            Изменить
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => handleArchive(list.id, list.isArchived)}
+            disabled={isLoading}
+            className={
+              list.isArchived
+                ? 'text-zinc-400 hover:text-zinc-200'
+                : 'text-zinc-400 hover:text-zinc-300'
+            }
+          >
+            {list.isArchived ? 'Восстановить' : 'Архивировать'}
+          </Button>
+
+          {isDeleting ? (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-400">Удалить?</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(list.id)}
+                disabled={isLoading}
+                className="text-red-400 hover:text-red-300"
+              >
+                Да
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeletingId(null)}
+                disabled={isLoading}
+                className="text-zinc-400 hover:text-zinc-300"
+              >
+                Нет
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeletingId(list.id)}
+              disabled={isLoading}
+              className="text-red-400 hover:text-red-300"
+            >
+              Удалить
+            </Button>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,18 +206,19 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       // Очищаем форму
       setName('')
       setDescription('')
-      setColor('#06b6d4')
+      setColor(DEFAULT_COLOR)
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Не удалось создать список')
     }
   }
 
   const handleEdit = (listId: string) => {
-    const list = customLists.find(l => l.id === listId)
+    const list = allCustomLists.find(l => l.id === listId)
     if (list) {
+      setLocalError(null)
       setName(list.name)
       setDescription(list.description || '')
-      setColor(list.color || '#06b6d4')
+      setColor(list.color || DEFAULT_COLOR)
       setEditingId(listId)
     }
   }
@@ -83,7 +244,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       // Очищаем форму
       setName('')
       setDescription('')
-      setColor('#06b6d4')
+      setColor(DEFAULT_COLOR)
       setEditingId(null)
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Не удалось обновить список')
@@ -91,14 +252,16 @@ export function WordListManager({ onClose }: WordListManagerProps) {
   }
 
   const handleCancelEdit = () => {
+    setLocalError(null)
     setName('')
     setDescription('')
-    setColor('#06b6d4')
+    setColor(DEFAULT_COLOR)
     setEditingId(null)
   }
 
   const handleDelete = async (listId: string) => {
     try {
+      setLocalError(null)
       await deleteList(listId)
       setDeletingId(null)
     } catch (err) {
@@ -108,6 +271,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
 
   const handleArchive = async (listId: string, isArchived: boolean) => {
     try {
+      setLocalError(null)
       await updateList(listId, { isArchived: !isArchived })
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Не удалось архивировать список')
@@ -166,21 +330,37 @@ export function WordListManager({ onClose }: WordListManagerProps) {
               <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Цвет метки
               </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-10 w-20 rounded border border-zinc-700 bg-zinc-800 cursor-pointer"
-                  disabled={isLoading}
-                />
-                <span className="text-sm text-zinc-400">{color}</span>
+              <div className="flex flex-wrap gap-3">
+                {availableColors.map((preset) => {
+                  const isSelected = color === preset
+
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setColor(preset)}
+                      disabled={isLoading}
+                      aria-pressed={isSelected}
+                      aria-label={`Выбрать цвет ${preset}`}
+                      className={`h-9 w-9 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                        isSelected
+                          ? 'ring-2 ring-cyan-400 border-white shadow-lg'
+                          : 'border-transparent hover:ring-2 hover:ring-cyan-300'
+                      } ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                      style={{ backgroundColor: preset }}
+                    >
+                      {isSelected && (
+                        <span className="sr-only">Текущий цвет</span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            {(localError || error) && (
+            {displayedError && (
               <div className="text-sm text-red-400 bg-red-950/50 border border-red-900/50 rounded p-3">
-                {localError || error}
+                {displayedError}
               </div>
             )}
 
@@ -209,6 +389,34 @@ export function WordListManager({ onClose }: WordListManagerProps) {
         </CardContent>
       </Card>
 
+      {autoLists.length > 0 && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-white text-base">
+              Системные списки ({autoLists.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {autoLists.map((list) => (
+              <div
+                key={list.id}
+                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2"
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-white">{list.name}</span>
+                  {list.description && (
+                    <span className="text-xs text-zinc-500">{list.description}</span>
+                  )}
+                </div>
+                <span className="text-xs text-zinc-400 whitespace-nowrap">
+                  {list.wordCount ?? 0} слов
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Список существующих списков */}
       {customLists.length > 0 && (
         <Card className="bg-zinc-900 border-zinc-800">
@@ -218,95 +426,25 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {customLists.map((list) => (
-              <div
-                key={list.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-zinc-950/50 border border-zinc-800 hover:border-zinc-700 transition-colors"
-                style={{ borderLeftColor: list.color, borderLeftWidth: '4px' }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-white font-medium truncate">
-                      {list.name}
-                    </h4>
-                    <span className="text-xs text-zinc-500 shrink-0">
-                      {list.wordCount || 0} слов
-                    </span>
-                  </div>
-                  {list.description && (
-                    <p className="text-sm text-zinc-400 truncate mt-1">
-                      {list.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(list.id)}
-                    disabled={isLoading}
-                    className="text-cyan-400 hover:text-cyan-300"
-                  >
-                    Изменить
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleArchive(list.id, list.isArchived)}
-                    disabled={isLoading}
-                    className="text-zinc-400 hover:text-zinc-300"
-                  >
-                    {list.isArchived ? 'Восстановить' : 'Архивировать'}
-                  </Button>
-
-                  {deletingId === list.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-400">Удалить?</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(list.id)}
-                        disabled={isLoading}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        Да
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeletingId(null)}
-                        disabled={isLoading}
-                        className="text-zinc-400 hover:text-zinc-300"
-                      >
-                        Нет
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeletingId(list.id)}
-                      disabled={isLoading}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      Удалить
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
+            {customLists.map(renderListRow)}
           </CardContent>
         </Card>
       )}
 
-      {customLists.length === 0 && !editingId && (
+      {archivedLists.length > 0 && (
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-white text-base">
+              Архив ({archivedLists.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {archivedLists.map(renderListRow)}
+          </CardContent>
+        </Card>
+      )}
+
+      {customLists.length === 0 && archivedLists.length === 0 && !editingId && (
         <div className="text-center py-8">
           <p className="text-zinc-400 mb-2">У вас пока нет пользовательских списков</p>
           <p className="text-sm text-zinc-500">

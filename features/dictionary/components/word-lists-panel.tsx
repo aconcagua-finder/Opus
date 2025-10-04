@@ -147,7 +147,11 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                   }
                   style={
                     list.color && activeListId !== list.id
-                      ? { borderLeftColor: list.color, borderLeftWidth: '3px' }
+                      ? {
+                          borderLeftColor: list.color,
+                          borderLeftWidth: '3px',
+                          borderLeftStyle: 'solid'
+                        }
                       : undefined
                   }
                 >
@@ -266,7 +270,11 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                 }
                 style={
                   list.color && activeListId !== list.id
-                    ? { borderLeftColor: list.color, borderLeftWidth: '3px' }
+                    ? {
+                        borderLeftColor: list.color,
+                        borderLeftWidth: '3px',
+                        borderLeftStyle: 'solid'
+                      }
                     : undefined
                 }
               >

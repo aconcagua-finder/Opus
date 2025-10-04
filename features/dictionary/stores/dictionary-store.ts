@@ -10,6 +10,7 @@ import {
   UpdateDictionaryEntryData 
 } from '../types'
 import { dictionaryAPI } from '../api/dictionary'
+import { useWordListsStore } from './word-lists-store'
 
 const DEFAULT_PAGE_SIZE = 50
 
@@ -150,6 +151,9 @@ export const useDictionaryStore = create<DictionaryStore>()(
           
           // Обновляем статистику
           get().fetchStats()
+
+          const wordListsStore = useWordListsStore.getState()
+          wordListsStore.applyEntryAdded(newEntry)
           
           return newEntry
         } catch (error) {
@@ -185,6 +189,7 @@ export const useDictionaryStore = create<DictionaryStore>()(
         set({ isLoading: true, error: null })
         
         try {
+          const entryToDelete = get().entries.find(entry => entry.id === id)
           await dictionaryAPI.deleteEntry(id)
           
           // Удаляем запись из списка
@@ -195,6 +200,10 @@ export const useDictionaryStore = create<DictionaryStore>()(
           
           // Обновляем статистику
           get().fetchStats()
+
+          if (entryToDelete) {
+            useWordListsStore.getState().applyEntryRemoved(entryToDelete)
+          }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Failed to delete entry'
           set({ error: errorMessage, isLoading: false })
@@ -229,6 +238,9 @@ export const useDictionaryStore = create<DictionaryStore>()(
             get().refreshEntries(),
             get().fetchStats(),
           ])
+
+          const wordListsStore = useWordListsStore.getState()
+          await wordListsStore.refreshLists({ includeArchived: true })
 
           return result
         } catch (error) {
