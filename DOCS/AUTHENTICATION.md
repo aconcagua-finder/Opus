@@ -23,7 +23,7 @@ Opus использует **Dual Auth System** - гибридную систем
 ### 3. Middleware
 - **Unified Protection** - защищает роуты от обеих систем
 - **Automatic Fallback** - NextAuth → Custom JWT
-- **Route Protection** - `/dashboard`, `/profile`, etc.
+- **Route Protection** - защищает `/dictionary`, `/settings` и API словаря
 
 ## Компоненты системы
 
@@ -65,7 +65,7 @@ export const authOptions: NextAuthOptions = {
 
 ### Frontend
 
-#### 1. Dual Hook System (`app/dashboard/page.tsx`)
+#### 1. Dual Hook System (пример: `app/dictionary/page.tsx`)
 ```typescript
 const { user: jwtUser, logout: jwtLogout } = useAuth()
 const { data: nextAuthSession } = useSession()
@@ -77,7 +77,7 @@ const user = nextAuthSession?.user || jwtUser
 #### 2. UI Components
 - **Login Page** - Email/Password + Google OAuth
 - **Register Page** - Email/Password + Google OAuth  
-- **Dashboard** - Unified user display
+- **Dictionary / Settings** - защищенные разделы, используют общую навигацию и защиту роутов
 
 ## Настройка Google OAuth
 

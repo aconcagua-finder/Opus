@@ -48,6 +48,8 @@ export {
   useDictionaryPreferences
 } from './hooks/use-dictionary'
 
+export { useDictionaryAiSettings } from './hooks/use-ai-settings'
+
 export { useWordLists } from './hooks/use-word-lists'
 
 // Components

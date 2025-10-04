@@ -2,28 +2,55 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { Language } from '@prisma/client'
 import {
-  DICTIONARY_AI_MODEL,
   DICTIONARY_AI_RESPONSE_FORMAT,
+  DEFAULT_DICTIONARY_AI_CLIENT_CONFIGURATION,
+  DictionaryAiClientConfiguration,
+  DictionaryAiReasoningEffort,
   buildDictionaryAiSystemPrompt,
   buildDictionaryAiUserPrompt,
 } from '@/features/dictionary/prompts/ai-import'
 
 const MAX_TEXT_BYTES = 2 * 1024 * 1024 // 2 MiB
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
+const REASONING_VALUES = ['low', 'medium', 'high'] as const satisfies readonly DictionaryAiReasoningEffort[]
+
+const trimmedString = () =>
+  z
+    .string()
+    .trim()
+    .min(1, 'String must not be empty after trimming')
+
 const requestSchema = z.object({
   text: z.string().min(1, 'Text is required'),
   sourceLanguage: z.nativeEnum(Language),
   targetLanguage: z.nativeEnum(Language),
   detectPhrases: z.boolean().default(false),
-})
-
-const trimmedString = () =>
-  z
-    .string()
-    .transform((value) => value.trim())
-    .refine((value) => value.length > 0, {
-      message: 'String must not be empty after trimming',
+  aiConfig: z
+    .object({
+      model: z
+        .string()
+        .trim()
+        .min(1)
+        .max(100)
+        .optional(),
+      maxCompletionTokens: z
+        .number()
+        .int()
+        .min(16)
+        .max(16000)
+        .optional(),
+      reasoningEffort: z.enum(REASONING_VALUES).optional(),
+      promptTemplates: z
+        .object({
+          systemTemplate: trimmedString().max(8000).optional(),
+          singleWordFocus: trimmedString().max(2000).optional(),
+          includePhrasesFocus: trimmedString().max(2000).optional(),
+          notesRule: trimmedString().max(4000).optional(),
+        })
+        .optional(),
     })
+    .optional(),
+})
 
 const generatedEntrySchema = z.object({
   word: trimmedString(),
@@ -90,7 +117,13 @@ export async function POST(request: NextRequest) {
     }
 
     const json = await request.json()
-    const { text, sourceLanguage, targetLanguage, detectPhrases } = requestSchema.parse(json)
+    const {
+      text,
+      sourceLanguage,
+      targetLanguage,
+      detectPhrases,
+      aiConfig,
+    } = requestSchema.parse(json)
 
     if (sourceLanguage === targetLanguage) {
       return NextResponse.json(
@@ -106,11 +139,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const systemPrompt = buildDictionaryAiSystemPrompt({
-      sourceLanguage,
-      targetLanguage,
-      detectPhrases,
-    })
+    const baseConfig = DEFAULT_DICTIONARY_AI_CLIENT_CONFIGURATION
+
+    const effectiveModelConfig: DictionaryAiClientConfiguration = {
+      model: aiConfig?.model?.trim() || baseConfig.model,
+      maxCompletionTokens: aiConfig?.maxCompletionTokens ?? baseConfig.maxCompletionTokens,
+      reasoningEffort: aiConfig?.reasoningEffort ?? baseConfig.reasoningEffort,
+      promptTemplates: {
+        systemTemplate: aiConfig?.promptTemplates?.systemTemplate || baseConfig.promptTemplates.systemTemplate,
+        singleWordFocus: aiConfig?.promptTemplates?.singleWordFocus || baseConfig.promptTemplates.singleWordFocus,
+        includePhrasesFocus: aiConfig?.promptTemplates?.includePhrasesFocus || baseConfig.promptTemplates.includePhrasesFocus,
+        notesRule: aiConfig?.promptTemplates?.notesRule || baseConfig.promptTemplates.notesRule,
+      },
+    }
+
+    const systemPrompt = buildDictionaryAiSystemPrompt(
+      {
+        sourceLanguage,
+        targetLanguage,
+        detectPhrases,
+      },
+      effectiveModelConfig.promptTemplates
+    )
 
     const userPrompt = buildDictionaryAiUserPrompt({
       sourceLanguage,
@@ -126,7 +176,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: DICTIONARY_AI_MODEL,
+        model: effectiveModelConfig.model,
         messages: [
           {
             role: 'system',
@@ -137,8 +187,8 @@ export async function POST(request: NextRequest) {
             content: userPrompt,
           },
         ],
-        max_completion_tokens: 4000,
-        reasoning_effort: "low",
+        max_completion_tokens: effectiveModelConfig.maxCompletionTokens,
+        reasoning_effort: effectiveModelConfig.reasoningEffort,
         response_format: DICTIONARY_AI_RESPONSE_FORMAT,
       }),
     })

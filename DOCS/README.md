@@ -46,7 +46,9 @@
   /(auth)              # Группа авторизации (login, register)
   /api                 # API роуты
     /auth              # Эндпоинты авторизации
-  /dashboard           # Защищенные страницы
+  /dictionary         # Основной защищенный раздел
+  /settings           # Настройки пользователя и ИИ
+  /dashboard          # Переадресация на словарь
   
 /features              # Feature-based модули
   /auth               # Модуль авторизации

@@ -2,63 +2,109 @@ import { Language } from '@prisma/client'
 
 type PromptLanguage = Language | `${Language}`
 
-export interface DictionaryAiSettings {
-  detectPhrases: boolean
+export type DictionaryAiReasoningEffort = 'low' | 'medium' | 'high'
+
+export interface DictionaryAiModelParameters {
+  model: string
+  maxCompletionTokens: number
+  reasoningEffort: DictionaryAiReasoningEffort
 }
 
-export interface DictionaryAiPromptParams extends DictionaryAiSettings {
+export interface DictionaryAiPromptTemplates {
+  systemTemplate: string
+  singleWordFocus: string
+  includePhrasesFocus: string
+  notesRule: string
+}
+
+export interface DictionaryAiClientConfiguration extends DictionaryAiModelParameters {
+  promptTemplates: DictionaryAiPromptTemplates
+}
+
+export interface DictionaryAiPromptParams {
   sourceLanguage: PromptLanguage
   targetLanguage: PromptLanguage
   text: string
+  detectPhrases: boolean
 }
 
-export const DEFAULT_DICTIONARY_AI_SETTINGS: DictionaryAiSettings = {
-  detectPhrases: false,
-}
+export type DictionaryAiSystemPromptParams = Pick<
+  DictionaryAiPromptParams,
+  'sourceLanguage' | 'targetLanguage' | 'detectPhrases'
+>
 
 export const DICTIONARY_AI_IMPORT_MAX_ITEMS = 50
 
-const SINGLE_WORDS_FOCUS = `- Focus strictly on individual vocabulary words.
-- Normalise each word to its base dictionary form when possible.
-- Ignore multi-word expressions entirely.`
-
-const INCLUDE_PHRASES_FOCUS = `- Extract a balanced mix of individual words and meaningful multi-word expressions (maximum 5 tokens).
-- Keep phrases intact and ensure their translations reflect the complete expression.
-- Include only phrases that are useful to learn as set expressions or collocations.`
-
-const NOTES_RULE = `- Provide the "notes" field as a short usage example (<= 360 characters) set in natural language.
-- Make the example immediately helpful for remembering the vocabulary item.
-- Prefer sentences in the source language; optionally append a translation in the target language after " — " and ensure it fully covers the entire example without truncation.
-- Any translation after " — " must be rendered entirely in the target language, must not repeat the source wording, and must convey the full meaning of the preceding example.`
-
-export const buildDictionaryAiSystemPrompt = ({
-  sourceLanguage,
-  targetLanguage,
-  detectPhrases,
-}: DictionaryAiSettings & {
-  sourceLanguage: PromptLanguage
-  targetLanguage: PromptLanguage
-}): string => {
-  const vocabularyFocus = detectPhrases ? INCLUDE_PHRASES_FOCUS : SINGLE_WORDS_FOCUS
-
-  return `You are an assistant that extracts foreign-language vocabulary pairs.
-Always reply with a JSON array of objects that strictly match this TypeScript type:
+const DEFAULT_SYSTEM_PROMPT_TEMPLATE = `Ты — ассистент, который извлекает пары слов иностранного языка.
+Всегда отвечай JSON-массивом объектов, строго соответствующих следующему типу TypeScript:
 
 type VocabularyItem = {
-  word: string // unique vocabulary item in the source language
-  translation: string // natural translation in the target language
-  notes: string // short usage example (<= 120 chars)
+  word: string // уникальное слово на исходном языке
+  translation: string // естественный перевод на целевой язык
+  notes: string // краткий пример употребления (<= 120 символов)
 }
 
-Rules:
-- Work only with the provided source language (${sourceLanguage}) and target language (${targetLanguage}).
-- Extract up to ${DICTIONARY_AI_IMPORT_MAX_ITEMS} of the most useful unique vocabulary items.
-${vocabularyFocus}
-- Ignore numbers, URLs, email addresses, gibberish, or duplicates.
-- Preserve proper nouns (names, places) with correct casing.
-${NOTES_RULE}
-- If nothing suitable is found, return an empty array [] without additional text.
-- DO NOT wrap the JSON answer in markdown code fences or add explanations.`
+Правила:
+- Работай только с исходным языком ({{sourceLanguage}}) и целевым языком ({{targetLanguage}}).
+- Извлекай до {{maxItems}} наиболее полезных уникальных словарных единиц.
+{{vocabularyFocus}}
+- Игнорируй числа, URL, e-mail, бессмысленные фрагменты и дубликаты.
+- Сохраняй правильное написание собственных имён и топонимов.
+{{notesRule}}
+- Если подходящих элементов нет, верни пустой массив [] без дополнительных комментариев.
+- НИКОГДА не обрамляй JSON в markdown-код и не добавляй пояснения.`
+
+const SINGLE_WORDS_FOCUS = `- Сосредоточься исключительно на отдельных словах словаря.
+- Нормализуй каждое слово до базовой словарной формы, если это уместно.
+- Полностью игнорируй многословные выражения.`
+
+const INCLUDE_PHRASES_FOCUS = `- Извлекай сбалансированный набор отдельных слов и полезных устойчивых выражений (не более 5 токенов).
+- Сохраняй целостность выражений и обеспечивай перевод всей фразы.
+- Добавляй только такие выражения, которые стоит выучить как устойчивые конструкции или коллокации.`
+
+const NOTES_RULE = `- Поле "notes" заполняй коротким примером употребления (<= 360 символов) на естественном языке.
+- Делай пример сразу полезным для запоминания словарной единицы.
+- Отдавай предпочтение предложениям на исходном языке; при необходимости добавляй перевод на целевой язык после " — " и следи, чтобы он полно передавал смысл без обрыва.
+- Любой перевод после " — " должен быть целиком на целевом языке, не повторять исходный текст и полностью передавать значение исходного примера.`
+
+export const DEFAULT_DICTIONARY_AI_MODEL: DictionaryAiModelParameters = {
+  model: process.env.OPENAI_DICTIONARY_MODEL || 'gpt-5-mini',
+  maxCompletionTokens: 4000,
+  reasoningEffort: 'low',
+}
+
+export const DEFAULT_DICTIONARY_AI_PROMPT_TEMPLATES: DictionaryAiPromptTemplates = {
+  systemTemplate: DEFAULT_SYSTEM_PROMPT_TEMPLATE,
+  singleWordFocus: SINGLE_WORDS_FOCUS,
+  includePhrasesFocus: INCLUDE_PHRASES_FOCUS,
+  notesRule: NOTES_RULE,
+}
+
+export const DEFAULT_DICTIONARY_AI_CLIENT_CONFIGURATION: DictionaryAiClientConfiguration = {
+  ...DEFAULT_DICTIONARY_AI_MODEL,
+  promptTemplates: DEFAULT_DICTIONARY_AI_PROMPT_TEMPLATES,
+}
+
+const applyTemplate = (template: string, context: Record<string, string>): string =>
+  template.replace(/\{\{(\w+)\}\}/g, (match, key) => context[key] ?? match)
+
+export const buildDictionaryAiSystemPrompt = (
+  {
+    sourceLanguage,
+    targetLanguage,
+    detectPhrases,
+  }: DictionaryAiSystemPromptParams,
+  templates: DictionaryAiPromptTemplates = DEFAULT_DICTIONARY_AI_PROMPT_TEMPLATES
+): string => {
+  const vocabularyFocus = detectPhrases ? templates.includePhrasesFocus : templates.singleWordFocus
+
+  return applyTemplate(templates.systemTemplate, {
+    sourceLanguage: String(sourceLanguage),
+    targetLanguage: String(targetLanguage),
+    maxItems: String(DICTIONARY_AI_IMPORT_MAX_ITEMS),
+    vocabularyFocus,
+    notesRule: templates.notesRule,
+  })
 }
 
 export const buildDictionaryAiUserPrompt = ({
@@ -68,15 +114,15 @@ export const buildDictionaryAiUserPrompt = ({
   detectPhrases,
 }: DictionaryAiPromptParams): string => {
   const detectionNote = detectPhrases
-    ? 'Extract both useful words and multi-word expressions when they carry unique meaning.'
-    : 'Extract only standalone vocabulary words and skip multi-word expressions.'
+    ? 'Извлекай полезные отдельные слова и устойчивые выражения, если они несут уникальный смысл.'
+    : 'Извлекай только отдельные слова и пропускай любые многословные выражения.'
 
-  return `Source language: ${sourceLanguage}
-Target language: ${targetLanguage}
-Detection mode: ${detectPhrases ? 'phrases+words' : 'single-words-only'}
-Guidelines: ${detectionNote}
+  return `Исходный язык: ${sourceLanguage}
+Целевой язык: ${targetLanguage}
+Режим извлечения: ${detectPhrases ? 'phrases+words' : 'single-words-only'}
+Пояснения: ${detectionNote}
 
-Text:
+Текст для анализа:
 """
 ${text}
 """`
@@ -113,4 +159,4 @@ export const DICTIONARY_AI_RESPONSE_FORMAT = {
   },
 } as const
 
-export const DICTIONARY_AI_MODEL = process.env.OPENAI_DICTIONARY_MODEL || 'gpt-5-mini'
+export const DICTIONARY_AI_MODEL = DEFAULT_DICTIONARY_AI_MODEL.model

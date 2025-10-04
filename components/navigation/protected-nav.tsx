@@ -14,9 +14,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { href: '/dictionary', label: '📚 Словарь' },
-  { href: '/dashboard', label: 'Обзор' },
   { href: '/settings', label: 'Настройки' },
-  { href: '/profile', label: 'Профиль' },
 ]
 
 export function ProtectedNav() {
@@ -100,18 +98,41 @@ export function ProtectedNav() {
             </div>
             <div className="flex items-center space-x-4">
               {!isAuthLoading && currentUser && (
-                <span className="text-zinc-500 text-sm max-w-[200px] truncate">
-                  {currentUser.email}
-                </span>
+                <div className="relative group">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-400 transition-all cursor-pointer group-hover:bg-zinc-900 group-hover:text-white">
+                    <span className="max-w-[220px] truncate">
+                      {currentUser.email}
+                    </span>
+                    <svg
+                      className="h-4 w-4 text-zinc-500 transition-transform duration-200 group-hover:text-cyan-400 group-hover:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div className="absolute right-0 mt-2 hidden min-w-[200px] rounded-lg border border-zinc-800 bg-zinc-950/90 shadow-xl backdrop-blur-md p-2 group-hover:flex group-hover:flex-col">
+                    <Button
+                      onClick={handleLogout}
+                      variant="ghost"
+                      size="sm"
+                      disabled={isAuthLoading}
+                      className="w-full justify-between text-zinc-200 hover:text-red-400 hover:bg-red-400/10"
+                    >
+                      Выйти
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
               )}
-              <Button
-                onClick={handleLogout}
-                className="bg-transparent text-cyan-400 border border-cyan-900/50 hover:bg-cyan-950/30 hover:border-cyan-700/50 transition-all"
-                size="sm"
-                disabled={isAuthLoading}
-              >
-                Выйти
-              </Button>
             </div>
           </div>
         </div>

@@ -1,11 +1,12 @@
-import { 
-  DictionaryEntry, 
-  CreateDictionaryEntryData, 
+import {
+  DictionaryEntry,
+  CreateDictionaryEntryData,
   UpdateDictionaryEntryData,
   DictionaryFilters,
   DictionaryStats,
-  Language
+  Language,
 } from '../types'
+import { DictionaryAiClientConfiguration } from '../prompts/ai-import'
 
 const API_BASE = '/api/dictionary'
 
@@ -48,6 +49,7 @@ export interface DictionaryAPI {
     sourceLanguage: Language
     targetLanguage: Language
     detectPhrases?: boolean
+    aiConfig?: DictionaryAiClientConfiguration
   }) => Promise<CreateDictionaryEntryData[]>
 
   // Массовое сохранение записей
@@ -178,16 +180,22 @@ export const dictionaryAPI: DictionaryAPI = {
   },
 
   async generateEntries(payload) {
-    const { detectPhrases = false, ...rest } = payload
+    const { detectPhrases = false, aiConfig, ...rest } = payload
+    const requestBody: Record<string, unknown> = {
+      ...rest,
+      detectPhrases,
+    }
+
+    if (aiConfig) {
+      requestBody.aiConfig = aiConfig
+    }
+
     const response = await fetch(`${API_BASE}/ai/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...rest,
-        detectPhrases,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {

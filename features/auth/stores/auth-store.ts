@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { devtools } from 'zustand/middleware'
-import axios, { AxiosError, AxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosHeaders, AxiosRequestConfig } from 'axios'
 import {
   SafeUser,
   AuthTokens,
@@ -310,7 +310,7 @@ apiClient.interceptors.response.use(
         const { tokens } = useAuthStore.getState()
         
         if (tokens?.accessToken) {
-          originalRequest.headers['Authorization'] = `Bearer ${tokens.accessToken}`
+          applyAuthHeader(originalRequest, tokens.accessToken)
           return apiClient(originalRequest)
         }
       } catch {
@@ -326,6 +326,20 @@ apiClient.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+const applyAuthHeader = (config: RetriableRequestConfig, token: string) => {
+  if (config.headers instanceof AxiosHeaders) {
+    config.headers.set('Authorization', `Bearer ${token}`)
+    return
+  }
+
+  if (!config.headers) {
+    config.headers = {}
+  }
+
+  const headers = config.headers as Record<string, unknown>
+  headers['Authorization'] = `Bearer ${token}`
+}
 
 // Вспомогательная функция для получения сообщения об ошибке
 function getErrorMessage(error: AuthError): string {

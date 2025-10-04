@@ -5,6 +5,7 @@ import { CreateDictionaryEntryData, Language } from '../types'
 import { LanguageSelector } from './language-selector'
 import { dictionaryAPI } from '../api/dictionary'
 import { useDictionary } from '../hooks/use-dictionary'
+import { useDictionaryAiSettings } from '../hooks/use-ai-settings'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
@@ -29,6 +30,12 @@ const createEditableEntry = (
 
 export function AiImportPanel({ onClose }: AiImportPanelProps) {
   const { importEntries } = useDictionary()
+  const {
+    modelConfig,
+    promptTemplates,
+    detectPhrasesDefault,
+    setDetectPhrasesDefault,
+  } = useDictionaryAiSettings()
 
   const [sourceLanguage, setSourceLanguage] = useState(Language.ENGLISH)
   const [targetLanguage, setTargetLanguage] = useState(Language.RUSSIAN)
@@ -38,14 +45,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [detectPhrases, setDetectPhrases] = useState<boolean>(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    const stored = window.localStorage.getItem('opus.dictionary.ai.detectPhrases')
-    return stored === 'true'
-  })
+  const [detectPhrases, setDetectPhrases] = useState<boolean>(detectPhrasesDefault)
 
   const textByteLength = useMemo(() => {
     if (!text) return 0
@@ -78,6 +78,17 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
         sourceLanguage,
         targetLanguage,
         detectPhrases,
+        aiConfig: {
+          model: modelConfig.model,
+          maxCompletionTokens: modelConfig.maxCompletionTokens,
+          reasoningEffort: modelConfig.reasoningEffort,
+          promptTemplates: {
+            systemTemplate: promptTemplates.systemTemplate,
+            singleWordFocus: promptTemplates.singleWordFocus,
+            includePhrasesFocus: promptTemplates.includePhrasesFocus,
+            notesRule: promptTemplates.notesRule,
+          },
+        },
       })
 
       if (!entries.length) {
@@ -189,15 +200,13 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
   }, [sourceLanguage, targetLanguage])
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
+    setDetectPhrases(detectPhrasesDefault)
+  }, [detectPhrasesDefault])
 
-    window.localStorage.setItem(
-      'opus.dictionary.ai.detectPhrases',
-      detectPhrases ? 'true' : 'false'
-    )
-  }, [detectPhrases])
+  const handleDetectPhrasesChange = (value: boolean) => {
+    setDetectPhrases(value)
+    setDetectPhrasesDefault(value)
+  }
 
   return (
     <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
@@ -270,7 +279,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
             type="checkbox"
             checked={detectPhrases}
             disabled={disabled}
-            onChange={(event) => setDetectPhrases(event.target.checked)}
+            onChange={(event) => handleDetectPhrasesChange(event.target.checked)}
             className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
           />
           <label
