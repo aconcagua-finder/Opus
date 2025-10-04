@@ -66,8 +66,8 @@ export default function DictionaryPage() {
 
   if (!mounted || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-[var(--accent-primary)]"></div>
       </div>
     )
   }
@@ -89,11 +89,11 @@ export default function DictionaryPage() {
           {editingEntry && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <span className="text-xs uppercase tracking-widest text-cyan-400/80">Редактирование</span>
-                <h2 className="text-2xl font-semibold text-white">
+                <span className="text-xs uppercase tracking-widest text-accent">Редактирование</span>
+                <h2 className="text-2xl font-semibold text-primary">
                   {editingEntry.word}
                 </h2>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-muted">
                   Внесите изменения и сохраните, чтобы обновить словарь.
                 </p>
               </div>
@@ -113,7 +113,7 @@ export default function DictionaryPage() {
         <section className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent">
+              <h1 className="bg-gradient-to-r from-[var(--text-primary)] via-[var(--accent-primary)] to-[var(--text-primary)] bg-clip-text text-2xl font-bold text-transparent sm:text-3xl lg:text-4xl">
                 Мой словарь
               </h1>
             </div>

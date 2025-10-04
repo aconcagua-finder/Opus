@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useWordLists } from '../hooks/use-word-lists'
-import { WORD_LIST_TYPE_ICONS } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 interface WordListsPanelProps {
   onManageClick: () => void
@@ -33,8 +33,8 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
 
   if (isCollapsed) {
     return (
-      <div className="bg-zinc-950/50 border border-zinc-800/50 backdrop-blur rounded-lg px-4 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
+      <div className="bg-surface-muted border border-subtle backdrop-blur rounded-lg px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -48,7 +48,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(false)}
-          className="text-cyan-400 hover:text-cyan-300"
+          className="text-accent hover:text-accent"
         >
           Развернуть
         </Button>
@@ -59,16 +59,16 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
   if (compact) {
     // Компактный режим для мобильных устройств
     return (
-      <div className="bg-zinc-950/50 border border-zinc-800/50 backdrop-blur rounded-lg p-4 space-y-3">
+      <div className="bg-surface-muted border border-subtle backdrop-blur rounded-lg p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">Мои списки</h3>
+          <h3 className="text-sm font-semibold text-primary">Мои списки</h3>
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={onManageClick}
-              className="text-cyan-400 hover:text-cyan-300"
+              className="text-accent hover:text-accent"
             >
               Управление
             </Button>
@@ -77,7 +77,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(true)}
-              className="text-zinc-400 hover:text-cyan-300"
+              className="text-muted hover:text-accent"
             >
               Свернуть
             </Button>
@@ -90,13 +90,8 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
             variant={!activeListId ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleListClick(null)}
-            className={
-              !activeListId
-                ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-start'
-                : 'w-full text-zinc-300 hover:text-cyan-300 justify-start'
-            }
+            className={cn('w-full justify-start px-3', activeListId ? 'text-secondary hover:text-accent' : '')}
           >
-            <span className="mr-2">📚</span>
             Все слова
           </Button>
 
@@ -108,16 +103,9 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
               variant={activeListId === list.id ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handleListClick(list.id)}
-              className={
-                activeListId === list.id
-                  ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-between'
-                  : 'w-full text-zinc-300 hover:text-cyan-300 justify-between'
-              }
+              className={cn('w-full justify-between px-3', activeListId !== list.id && 'text-secondary hover:text-accent')}
             >
-              <span className="flex items-center gap-2">
-                <span>{WORD_LIST_TYPE_ICONS[list.type]}</span>
-                <span>{list.name}</span>
-              </span>
+              <span className="truncate">{list.name}</span>
               <span className="text-xs opacity-70">
                 {list.wordCount || 0}
               </span>
@@ -127,8 +115,8 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
           {/* Кастомные списки */}
           {customLists.length > 0 && (
             <>
-              <div className="border-t border-zinc-800/50 my-2 pt-2">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+              <div className="border-t border-subtle my-2 pt-2">
+                <p className="text-xs text-muted uppercase tracking-wider mb-2">
                   Мои списки
                 </p>
               </div>
@@ -140,11 +128,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                   variant={activeListId === list.id ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => handleListClick(list.id)}
-                  className={
-                    activeListId === list.id
-                      ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-between'
-                      : 'w-full text-zinc-300 hover:text-cyan-300 justify-between'
-                  }
+                  className={cn('w-full justify-between px-3', activeListId !== list.id && 'text-secondary hover:text-accent')}
                   style={
                     list.color && activeListId !== list.id
                       ? {
@@ -156,10 +140,16 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                   }
                 >
                   <span className="flex items-center gap-2 truncate">
-                    <span>📋</span>
+                    {list.color && (
+                      <span
+                        className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: list.color }}
+                        aria-hidden="true"
+                      />
+                    )}
                     <span className="truncate">{list.name}</span>
                   </span>
-                  <span className="text-xs opacity-70 ml-2 shrink-0">
+                  <span className="ml-2 shrink-0 text-xs opacity-70">
                     {list.wordCount || 0}
                   </span>
                 </Button>
@@ -169,7 +159,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
         </div>
 
         {isLoading && (
-          <div className="text-xs text-zinc-500 text-center py-2">
+          <div className="text-xs text-muted text-center py-2">
             Загрузка...
           </div>
         )}
@@ -179,10 +169,10 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
 
   // Обычный режим (Card)
   return (
-    <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
+    <Card className="bg-surface-muted border-subtle backdrop-blur">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-white text-base font-semibold">
+          <CardTitle className="text-primary text-base font-semibold">
             Мои списки
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -191,7 +181,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
               variant="ghost"
               size="sm"
               onClick={onManageClick}
-              className="text-cyan-400 hover:text-cyan-300"
+              className="text-accent hover:text-accent"
             >
               Управление
             </Button>
@@ -200,7 +190,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(true)}
-              className="text-zinc-400 hover:text-cyan-300"
+              className="text-muted hover:text-accent"
             >
               Свернуть
             </Button>
@@ -213,13 +203,8 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
           variant={!activeListId ? 'default' : 'ghost'}
           size="sm"
           onClick={() => handleListClick(null)}
-          className={
-            !activeListId
-              ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-start'
-              : 'w-full text-zinc-300 hover:text-cyan-300 justify-start'
-          }
+          className={cn('w-full justify-start px-3', activeListId ? 'text-secondary hover:text-accent' : '')}
         >
-          <span className="mr-2">📚</span>
           Все слова
         </Button>
 
@@ -231,16 +216,9 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
             variant={activeListId === list.id ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleListClick(list.id)}
-            className={
-              activeListId === list.id
-                ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-between'
-                : 'w-full text-zinc-300 hover:text-cyan-300 justify-between'
-            }
+            className={cn('w-full justify-between px-3', activeListId !== list.id && 'text-secondary hover:text-accent')}
           >
-            <span className="flex items-center gap-2">
-              <span>{WORD_LIST_TYPE_ICONS[list.type]}</span>
-              <span>{list.name}</span>
-            </span>
+            <span className="truncate">{list.name}</span>
             <span className="text-xs opacity-70">
               {list.wordCount || 0}
             </span>
@@ -250,8 +228,8 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
         {/* Кастомные списки */}
         {customLists.length > 0 && (
           <>
-            <div className="border-t border-zinc-800/50 my-2 pt-2">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+            <div className="border-t border-subtle my-2 pt-2">
+              <p className="text-xs text-muted uppercase tracking-wider mb-2">
                 Мои списки
               </p>
             </div>
@@ -263,11 +241,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                 variant={activeListId === list.id ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleListClick(list.id)}
-                className={
-                  activeListId === list.id
-                    ? 'w-full bg-cyan-600 hover:bg-cyan-700 justify-between'
-                    : 'w-full text-zinc-300 hover:text-cyan-300 justify-between'
-                }
+                className={cn('w-full justify-between px-3', activeListId !== list.id && 'text-secondary hover:text-accent')}
                 style={
                   list.color && activeListId !== list.id
                     ? {
@@ -279,10 +253,16 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
                 }
               >
                 <span className="flex items-center gap-2 truncate">
-                  <span>📋</span>
+                  {list.color && (
+                    <span
+                      className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: list.color }}
+                      aria-hidden="true"
+                    />
+                  )}
                   <span className="truncate">{list.name}</span>
                 </span>
-                <span className="text-xs opacity-70 ml-2 shrink-0">
+                <span className="ml-2 shrink-0 text-xs opacity-70">
                   {list.wordCount || 0}
                 </span>
               </Button>
@@ -291,7 +271,7 @@ export function WordListsPanel({ onManageClick, compact = false }: WordListsPane
         )}
 
         {isLoading && (
-          <div className="text-xs text-zinc-500 text-center py-2">
+          <div className="text-xs text-muted text-center py-2">
             Загрузка...
           </div>
         )}

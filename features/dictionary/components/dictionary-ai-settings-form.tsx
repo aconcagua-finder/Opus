@@ -131,9 +131,9 @@ export function DictionaryAiSettingsForm() {
   )
 
   return (
-    <Card className="bg-zinc-950/60 border-zinc-800/60 backdrop-blur">
+    <Card className="bg-surface-muted border-subtle backdrop-blur">
       <CardHeader>
-        <CardTitle className="text-white text-2xl">Настройки ИИ для обработки слов</CardTitle>
+        <CardTitle className="text-primary text-2xl">Настройки ИИ для обработки слов</CardTitle>
         <CardDescription>
           Текущая конфигурация используется при автогенерации слов из текста. Измените модель, параметры
           и подсказки, чтобы тонко настроить поведение помощника.
@@ -142,7 +142,7 @@ export function DictionaryAiSettingsForm() {
       <CardContent className="space-y-8">
         <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">ID модели</label>
+            <label className="block text-sm font-medium text-secondary">ID модели</label>
             <Input
               value={draftModelConfig.model}
               onChange={(event) =>
@@ -153,12 +153,12 @@ export function DictionaryAiSettingsForm() {
               }
               placeholder="gpt-5-mini"
             />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted">
               Должно совпадать с доступным именем модели в вашей подписке OpenAI.
             </p>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Максимум токенов на ответ</label>
+            <label className="block text-sm font-medium text-secondary">Максимум токенов на ответ</label>
             <Input
               type="number"
               min={MIN_COMPLETION_TOKENS}
@@ -166,10 +166,10 @@ export function DictionaryAiSettingsForm() {
               value={draftModelConfig.maxCompletionTokens}
               onChange={(event) => handleMaxTokensChange(event.target.value)}
             />
-            <p className="text-xs text-zinc-500">Управляет длиной ответа модели. Значение ограничено 16–16000.</p>
+            <p className="text-xs text-muted">Управляет длиной ответа модели. Значение ограничено 16–16000.</p>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Режим рассуждений</label>
+            <label className="block text-sm font-medium text-secondary">Режим рассуждений</label>
             <select
               value={draftModelConfig.reasoningEffort}
               onChange={(event) =>
@@ -178,19 +178,19 @@ export function DictionaryAiSettingsForm() {
                   reasoningEffort: event.target.value as typeof prev.reasoningEffort,
                 }))
               }
-              className="h-11 rounded-md bg-zinc-950/50 backdrop-blur-md border border-white/20 px-3 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+              className="h-11 rounded-lg border border-subtle bg-surface-muted px-3 text-sm text-primary transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background-primary)]"
             >
               <option value="low">Низкий</option>
               <option value="medium">Средний</option>
               <option value="high">Высокий</option>
             </select>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted">
               Чем выше значение, тем больше времени модель тратит на структурирование ответа.
             </p>
           </div>
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-zinc-300">Режим по умолчанию</label>
-            <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-zinc-900/40 px-3 py-3">
+            <label className="block text-sm font-medium text-secondary">Режим по умолчанию</label>
+            <div className="flex items-start gap-3 rounded-lg border border-subtle bg-surface-muted px-3 py-3">
               <input
                 id="ai-settings-detect-phrases-default"
                 type="checkbox"
@@ -200,14 +200,14 @@ export function DictionaryAiSettingsForm() {
                   setDraftDetectPhrasesDefault(nextValue)
                   setPreviewDetectPhrases(nextValue)
                 }}
-                className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
+                className="mt-1 h-4 w-4 cursor-pointer rounded border-subtle bg-surface-muted text-accent focus:ring focus:ring-[var(--accent-primary)] focus:ring-opacity-40"
               />
               <label
                 htmlFor="ai-settings-detect-phrases-default"
-                className="flex flex-col text-sm text-zinc-300 cursor-pointer select-none"
+                className="flex flex-col text-sm text-secondary cursor-pointer select-none"
               >
                 <span className="font-medium">Определять фразы автоматически</span>
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs text-muted">
                   Включает поиск устойчивых выражений при генерации слов. Можно менять в панели импорта.
                 </span>
               </label>
@@ -218,14 +218,14 @@ export function DictionaryAiSettingsForm() {
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Системный промпт</h3>
-              <p className="text-xs text-zinc-500">
+              <h3 className="text-lg font-semibold text-primary">Системный промпт</h3>
+              <p className="text-xs text-muted">
                 Используйте плейсхолдеры{' '}
-                <span className="font-mono text-zinc-300">{'{{sourceLanguage}}'}</span>,{' '}
-                <span className="font-mono text-zinc-300">{'{{targetLanguage}}'}</span>,{' '}
-                <span className="font-mono text-zinc-300">{'{{maxItems}}'}</span>,{' '}
-                <span className="font-mono text-zinc-300">{'{{vocabularyFocus}}'}</span> и{' '}
-                <span className="font-mono text-zinc-300">{'{{notesRule}}'}</span>.
+                <span className="font-mono text-secondary">{'{{sourceLanguage}}'}</span>,{' '}
+                <span className="font-mono text-secondary">{'{{targetLanguage}}'}</span>,{' '}
+                <span className="font-mono text-secondary">{'{{maxItems}}'}</span>,{' '}
+                <span className="font-mono text-secondary">{'{{vocabularyFocus}}'}</span> и{' '}
+                <span className="font-mono text-secondary">{'{{notesRule}}'}</span>.
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={handleCopySystemPrompt}>
@@ -246,7 +246,7 @@ export function DictionaryAiSettingsForm() {
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Фокус: только слова</label>
+            <label className="block text-sm font-medium text-secondary">Фокус: только слова</label>
             <Textarea
               value={draftPromptTemplates.singleWordFocus}
               onChange={(event) =>
@@ -259,7 +259,7 @@ export function DictionaryAiSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Фокус: слова и фразы</label>
+            <label className="block text-sm font-medium text-secondary">Фокус: слова и фразы</label>
             <Textarea
               value={draftPromptTemplates.includePhrasesFocus}
               onChange={(event) =>
@@ -272,7 +272,7 @@ export function DictionaryAiSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-300">Правила заметок</label>
+            <label className="block text-sm font-medium text-secondary">Правила заметок</label>
             <Textarea
               value={draftPromptTemplates.notesRule}
               onChange={(event) =>
@@ -289,8 +289,8 @@ export function DictionaryAiSettingsForm() {
         <section className="space-y-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-white">Предпросмотр системного промпта</h3>
-              <p className="text-xs text-zinc-500">
+              <h3 className="text-lg font-semibold text-primary">Предпросмотр системного промпта</h3>
+              <p className="text-xs text-muted">
                 Пример рассчитывается для пары EN → RU. Режим: {previewDetectPhrases ? 'слова и фразы' : 'только слова'}.
               </p>
             </div>
@@ -305,14 +305,14 @@ export function DictionaryAiSettingsForm() {
               </Button>
             </div>
           </div>
-          <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/70 p-4 text-sm text-zinc-200 max-h-[260px] overflow-y-auto whitespace-pre-wrap">
+          <div className="rounded-lg border border-subtle bg-surface-muted p-4 text-sm text-primary max-h-[260px] overflow-y-auto whitespace-pre-wrap">
             {systemPromptPreview}
           </div>
         </section>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted">
             Нажмите «Сбросить настройки», чтобы вернуть значения по умолчанию, заданные системой.
           </p>
           {saved && <span className="text-xs text-emerald-400">Настройки сохранены</span>}

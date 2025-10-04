@@ -137,10 +137,3 @@ export const WORD_LIST_TYPE_NAMES: Record<WordListType, string> = {
   [WordListType.AUTO_14_DAYS]: 'Последние 14 дней',
   [WordListType.AUTO_28_DAYS]: 'Последние 28 дней'
 }
-
-export const WORD_LIST_TYPE_ICONS: Record<WordListType, string> = {
-  [WordListType.CUSTOM]: '📋',
-  [WordListType.AUTO_7_DAYS]: '🔥',
-  [WordListType.AUTO_14_DAYS]: '⭐',
-  [WordListType.AUTO_28_DAYS]: '📅'
-}

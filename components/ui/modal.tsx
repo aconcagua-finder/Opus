@@ -45,7 +45,7 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-overlay backdrop-blur-sm transition-colors"
         onClick={onClose}
       />
       <div className="relative z-10 flex w-full justify-center px-4 pb-6 sm:pb-10">
@@ -53,14 +53,14 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
           role="dialog"
           aria-modal="true"
           className={cn(
-            'relative w-full max-w-xl rounded-t-3xl border border-zinc-800/60 bg-zinc-950/95 shadow-[0_20px_60px_rgba(8,145,178,0.25)] sm:rounded-3xl',
-            'max-h-[90vh] overflow-hidden sm:max-h-[85vh] backdrop-blur-lg',
+            'relative w-full max-w-xl rounded-t-3xl border border-subtle bg-surface-transparent shadow-soft transition-colors sm:rounded-3xl',
+            'max-h-[90vh] overflow-hidden backdrop-blur-2xl sm:max-h-[85vh]',
             className
           )}
         >
           <button
             onClick={onClose}
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900/80 text-zinc-400 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-muted transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background-primary)]"
             aria-label="Закрыть"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -68,7 +68,7 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
               <path d="M6 6l12 12" />
             </svg>
           </button>
-          <div className="max-h-[90vh] overflow-y-auto px-5 pb-6 pt-12 sm:px-8 sm:pt-14">
+          <div className="max-h-[90vh] overflow-y-auto px-5 pb-6 pt-12 text-primary transition-colors sm:px-8 sm:pt-14">
             {children}
           </div>
         </div>

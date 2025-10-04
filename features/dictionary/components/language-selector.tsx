@@ -2,6 +2,7 @@
 
 import { Language } from '../types'
 import { AVAILABLE_LANGUAGES } from '../api/languages'
+import { cn } from '@/lib/utils'
 
 interface LanguageSelectorProps {
   value?: Language
@@ -23,22 +24,19 @@ export function LanguageSelector({
       value={value || ''}
       onChange={(e) => e.target.value && onChange(e.target.value as Language)}
       disabled={disabled}
-      className={`
-        flex h-10 w-full rounded-md bg-zinc-950/50 backdrop-blur-md border border-white/20 
-        px-3 py-2 text-sm text-white placeholder:text-zinc-500 
-        focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50 
-        disabled:cursor-not-allowed disabled:opacity-50
-        ${className}
-      `}
+      className={cn(
+        'flex h-10 w-full rounded-lg border border-subtle bg-surface-muted px-3 py-2 text-sm text-primary transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background-primary)] disabled:cursor-not-allowed disabled:opacity-60 backdrop-blur-xl',
+        className
+      )}
     >
-      <option value="" disabled className="bg-zinc-900 text-zinc-400">
+      <option value="" disabled className="bg-surface text-muted">
         {placeholder}
       </option>
       {AVAILABLE_LANGUAGES.map((language) => (
         <option 
           key={language.value} 
           value={language.value}
-          className="bg-zinc-900 text-white"
+          className="bg-surface text-primary"
         >
           {language.flag} {language.label}
         </option>

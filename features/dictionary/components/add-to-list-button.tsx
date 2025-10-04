@@ -148,7 +148,7 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
         variant="ghost"
         size={compact ? 'sm' : 'default'}
         onClick={toggleDropdown}
-        className="text-zinc-400 hover:text-cyan-300 relative"
+        className="relative text-muted transition-colors hover:text-accent"
         title="Добавить в список"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +161,7 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
         </svg>
         {!compact && <span className="ml-2">В список</span>}
         {listsCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-cyan-500 text-white text-[10px] flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[10px] text-[var(--text-on-accent)]">
             {listsCount}
           </span>
         )}
@@ -171,25 +171,25 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
         createPortal(
           <div
             ref={menuRef}
-            className="fixed w-64 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+            className="fixed w-64 bg-surface-muted border border-subtle rounded-lg shadow-lg max-h-80 overflow-y-auto"
             style={{
               top: `${menuPosition.top}px`,
               left: `${menuPosition.left}px`,
               zIndex: PORTAL_Z_INDEX
             }}
           >
-            <div className="p-3 border-b border-zinc-800">
-              <h4 className="text-sm font-semibold text-white">Добавить в список</h4>
+            <div className="border-b border-subtle p-3">
+              <h4 className="text-sm font-semibold text-primary">Добавить в список</h4>
             </div>
 
             {isLoading ? (
-              <div className="p-4 text-center text-sm text-zinc-400">
+              <div className="p-4 text-center text-sm text-muted">
                 Загрузка...
               </div>
             ) : customLists.length === 0 ? (
               <div className="p-4 text-center">
-                <p className="text-sm text-zinc-400 mb-2">Нет доступных списков</p>
-                <p className="text-xs text-zinc-500">
+                <p className="mb-2 text-sm text-muted">Нет доступных списков</p>
+                <p className="text-xs text-muted">
                   Создайте список в управлении списками
                 </p>
               </div>
@@ -203,18 +203,18 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
                       key={list.id}
                       type="button"
                       onClick={() => handleToggleList(list.id)}
-                      className="w-full px-4 py-2 flex items-center gap-3 hover:bg-zinc-800 transition-colors text-left"
+                      className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-muted"
                     >
                       <div
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
                           isInList
-                            ? 'bg-cyan-600 border-cyan-600'
-                            : 'border-zinc-600'
+                            ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--text-on-accent)]'
+                            : 'border-subtle'
                         }`}
                       >
                         {isInList && (
                           <svg
-                            className="w-3 h-3 text-white"
+                            className="w-3 h-3 text-primary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -237,18 +237,18 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
                               style={{ backgroundColor: list.color }}
                             />
                           )}
-                          <span className="text-sm text-white truncate">
+                          <span className="truncate text-sm text-primary">
                             {list.name}
                           </span>
                         </div>
                         {list.description && (
-                          <p className="text-xs text-zinc-500 truncate mt-0.5">
+                          <p className="mt-0.5 truncate text-xs text-muted">
                             {list.description}
                           </p>
                         )}
                       </div>
 
-                      <span className="text-xs text-zinc-500 shrink-0">
+                      <span className="shrink-0 text-xs text-muted">
                         {list.wordCount || 0}
                       </span>
                     </button>

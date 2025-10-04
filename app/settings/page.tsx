@@ -51,7 +51,7 @@ export default function SettingsPage() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent mb-2">
             Настройки
           </h1>
-          <p className="text-sm sm:text-base text-zinc-500">
+          <p className="text-sm text-muted sm:text-base">
             Управляйте параметрами аккаунта и настройками ИИ, который помогает подбирать слова.
           </p>
         </header>

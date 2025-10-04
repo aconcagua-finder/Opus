@@ -8,10 +8,10 @@ const Alert = React.forwardRef<
   }
 >(({ className, variant = 'default', ...props }, ref) => {
   const variants = {
-    default: 'bg-white/10 border-white/20 text-white',
-    error: 'bg-red-500/10 border-red-500/20 text-red-400',
-    success: 'bg-green-500/10 border-green-500/20 text-green-400',
-    warning: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
+    default: 'border-subtle bg-surface-muted text-primary',
+    error: 'border-red-500/40 bg-red-500/10 text-red-500',
+    success: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500',
+    warning: 'border-amber-500/40 bg-amber-500/10 text-amber-600',
   }
 
   return (
@@ -19,7 +19,7 @@ const Alert = React.forwardRef<
       ref={ref}
       role="alert"
       className={cn(
-        "relative w-full rounded-lg border p-4 backdrop-blur-md",
+        'relative w-full rounded-xl border p-4 backdrop-blur-xl transition-colors',
         variants[variant],
         className
       )}

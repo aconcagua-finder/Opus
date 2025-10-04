@@ -12,12 +12,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Убираем isLoading из props чтобы не передавать в DOM
     const buttonProps = { ...props }
     const variants = {
-      default: 'bg-cyan-600 text-white hover:bg-cyan-700',
-      gradient: 'gradient-primary text-white hover:opacity-90',
-      outline: 'border border-cyan-400 text-cyan-400 hover:bg-cyan-400/10',
-      ghost: 'text-cyan-400 hover:bg-cyan-400/10',
-      link: 'text-cyan-400 underline-offset-4 hover:underline',
-    }
+      default: 'bg-[var(--accent-primary)] text-[var(--text-on-accent)] shadow-soft hover:bg-[var(--accent-secondary)]',
+      gradient: 'bg-gradient-to-r from-[var(--accent-primary)] via-[var(--accent-secondary)] to-[var(--accent-primary)] text-[var(--text-on-accent)] shadow-accent hover:opacity-90',
+      outline: 'border border-subtle text-primary hover:bg-accent-soft hover:text-accent',
+      ghost: 'text-muted hover:bg-accent-soft hover:text-accent',
+      link: 'text-accent underline-offset-4 hover:underline',
+    } as const
 
     const sizes = {
       default: 'h-10 px-4 py-2',
@@ -29,7 +29,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          'inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background-primary)] disabled:pointer-events-none disabled:opacity-50',
           variants[variant],
           sizes[size],
           className

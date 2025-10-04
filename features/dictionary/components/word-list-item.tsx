@@ -60,7 +60,7 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
   const toggleButtonBase = 'max-w-full text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60'
 
   return (
-    <div className="rounded-xl border border-zinc-800/60 bg-zinc-950/50 p-4 backdrop-blur-sm shadow-sm">
+    <div className="rounded-xl border border-soft bg-surface-muted p-4 shadow-sm transition-colors hover:border-subtle">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -70,14 +70,14 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
                 onClick={() => setSourceVisible((prev) => !prev)}
                 className={`${toggleButtonBase} ${
                   sourceVisible
-                    ? 'cursor-pointer text-lg font-semibold text-white'
-                    : 'cursor-pointer text-sm text-zinc-400 italic underline underline-offset-2'
+                    ? 'cursor-pointer text-lg font-semibold text-primary'
+                    : 'cursor-pointer text-sm text-muted italic underline underline-offset-2'
                 }`}
               >
                 {sourceVisible ? entry.word : 'Показать оригинал'}
               </button>
             ) : (
-              <span className="text-lg font-semibold text-white break-words">
+              <span className="text-lg font-semibold text-primary break-words">
                 {entry.word}
               </span>
             )}
@@ -90,14 +90,14 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
                 onClick={() => setTranslationVisible((prev) => !prev)}
                 className={`${toggleButtonBase} ${
                   translationVisible
-                    ? 'cursor-pointer text-lg font-medium text-cyan-300'
-                    : 'cursor-pointer text-sm text-zinc-400 italic underline underline-offset-2'
+                    ? 'cursor-pointer text-lg font-medium text-accent'
+                    : 'cursor-pointer text-sm text-muted italic underline underline-offset-2'
                 }`}
               >
                 {translationVisible ? entry.translation : 'Показать перевод'}
               </button>
             ) : (
-              <span className="text-lg font-medium text-cyan-300 break-words">
+              <span className="text-lg font-medium text-accent break-words">
                 {entry.translation}
               </span>
             )}
@@ -105,7 +105,7 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
 
           {showNotes && entry.notes && (
             mode === DictionaryListContentMode.FULL ? (
-              <div className="text-sm text-zinc-400 italic">
+              <div className="text-sm text-muted italic">
                 {entry.notes}
               </div>
             ) : (
@@ -117,19 +117,19 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
                       variant="ghost"
                       size="sm"
                       onClick={() => setNotesVisible((prev) => !prev)}
-                      className="h-7 px-2 text-zinc-400 hover:text-cyan-300"
+                      className="h-7 px-2 text-muted hover:text-accent"
                     >
                       {notesVisible ? 'Скрыть подсказку' : 'Показать подсказку'}
                     </Button>
                     {notesVisible && (
-                      <div className="text-sm text-zinc-400 italic">
+                      <div className="text-sm text-muted italic">
                         {entry.notes}
                       </div>
                     )}
                   </>
                 ) : (
                   notesVisible && (
-                    <div className="text-sm text-zinc-400 italic">
+                    <div className="text-sm text-muted italic">
                       {entry.notes}
                     </div>
                   )
@@ -139,7 +139,7 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
           )}
         </div>
 
-        <div className="flex w-full flex-col gap-3 text-sm text-zinc-400 sm:w-auto sm:items-end">
+        <div className="flex w-full flex-col gap-3 text-sm text-muted sm:w-auto sm:items-end">
           {showActions && (onEdit || onDelete) && (
             <div className="flex items-center justify-start gap-2 sm:justify-end">
               <AddToListButton entryId={entry.id} compact />
@@ -152,7 +152,7 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
                     event.stopPropagation()
                     onEdit?.(entry)
                   }}
-                  className="h-8 px-2 text-zinc-400 hover:text-cyan-400"
+                  className="h-8 px-2 text-muted hover:text-accent"
                 >
                   <span className="sr-only">Редактировать</span>
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@ export function WordListItem({ entry, mode, showNotes, onEdit, onDelete, showAct
                   className={`h-8 px-2 transition-colors ${
                     confirmDelete
                       ? 'text-red-400 hover:text-red-300'
-                      : 'text-zinc-400 hover:text-red-400'
+                      : 'text-muted hover:text-red-400'
                   }`}
                 >
                   <span className="sr-only">Удалить</span>

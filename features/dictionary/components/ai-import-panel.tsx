@@ -7,8 +7,10 @@ import { dictionaryAPI } from '../api/dictionary'
 import { useDictionary } from '../hooks/use-dictionary'
 import { useDictionaryAiSettings } from '../hooks/use-ai-settings'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const MAX_TEXT_BYTES = 2 * 1024 * 1024
 
@@ -209,26 +211,26 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
   }
 
   return (
-    <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
+    <Card className="shadow-soft transition-colors">
       <CardHeader>
-        <CardTitle className="text-white">Добавить список слов (ИИ)</CardTitle>
+        <CardTitle className="text-primary">Добавить список слов (ИИ)</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {error && (
-          <Alert className="bg-red-950/50 border-red-900/50 text-red-200">
-            {error}
+          <Alert variant="error">
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
         {successMessage && (
-          <Alert className="bg-emerald-950/50 border-emerald-900/50 text-emerald-200">
-            {successMessage}
+          <Alert variant="success">
+            <AlertDescription>{successMessage}</AlertDescription>
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-muted">
               Язык исходного текста
             </label>
             <LanguageSelector
@@ -242,7 +244,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-muted">
               Язык перевода
             </label>
             <LanguageSelector
@@ -258,36 +260,36 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-muted">
             Текст для анализа
           </label>
-          <textarea
+          <Textarea
             value={text}
             onChange={(event) => setText(event.target.value)}
             disabled={disabled}
             placeholder="Вставьте сюда статью, диалог или список слов..."
-            className="flex w-full rounded-md bg-zinc-950/50 backdrop-blur-md border border-white/20 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[160px]"
+            className="min-h-[160px]"
           />
-          <div className="mt-1 text-xs text-zinc-500">
+          <div className="mt-1 text-xs text-muted">
             Размер: {(textByteLength / 1024).toFixed(1)} КБ из 2048 КБ
           </div>
         </div>
 
-        <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-zinc-950/40 px-3 py-3">
+        <div className="flex items-start gap-3 rounded-lg border border-subtle bg-surface-muted px-3 py-3">
           <input
             id="dictionary-ai-detect-phrases"
             type="checkbox"
             checked={detectPhrases}
             disabled={disabled}
             onChange={(event) => handleDetectPhrasesChange(event.target.checked)}
-            className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
+            className="mt-1 h-4 w-4 cursor-pointer rounded border-subtle bg-surface-muted text-accent focus:ring focus:ring-[var(--accent-primary)] focus:ring-opacity-40"
           />
           <label
             htmlFor="dictionary-ai-detect-phrases"
-            className="flex flex-col text-sm text-zinc-300 cursor-pointer select-none"
+            className="flex flex-col select-none text-sm text-muted cursor-pointer"
           >
-            <span className="font-medium">Определять фразы</span>
-            <span className="text-xs text-zinc-500">
+            <span className="font-medium text-primary">Определять фразы</span>
+            <span className="text-xs text-muted">
               При включении ИИ ищет устойчивые выражения и коллокации, а «Подсказка» будет содержать короткий пример употребления.
             </span>
           </label>
@@ -298,7 +300,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
             type="button"
             onClick={handleGenerate}
             disabled={disabled}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            isLoading={isGenerating}
           >
             {isGenerating ? 'Генерируем...' : 'Сгенерировать список'}
           </Button>
@@ -315,13 +317,13 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
         {generated.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-zinc-200">
+              <h3 className="text-sm font-semibold text-primary">
                 Предварительный список ({generated.length})
               </h3>
               <Button
                 type="button"
                 variant="ghost"
-                className="text-xs text-zinc-400 hover:text-red-400"
+                className="text-xs text-muted hover:text-red-500"
                 onClick={() => setGenerated([])}
                 disabled={disabled}
               >
@@ -329,44 +331,44 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
               </Button>
             </div>
 
-            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+            <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
               {generated.map((entry) => (
                 <div
                   key={entry.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg bg-zinc-900/40 border border-zinc-800/60"
+                  className="grid grid-cols-1 gap-3 rounded-lg border border-subtle bg-surface-muted p-3 backdrop-blur-xl md:grid-cols-12"
                 >
                   <div className="md:col-span-3">
-                    <label className="block text-xs text-zinc-500 mb-1">Слово</label>
-                    <input
+                    <label className="mb-1 block text-xs text-muted">Слово</label>
+                    <Input
                       value={entry.word}
                       onChange={(event) => handleEntryChange(entry.id, 'word', event.target.value)}
-                      className="w-full rounded-md bg-zinc-950/60 border border-white/10 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                      className="h-9"
                       disabled={disabled}
                     />
                   </div>
                   <div className="md:col-span-3">
-                    <label className="block text-xs text-zinc-500 mb-1">Перевод</label>
-                    <input
+                    <label className="mb-1 block text-xs text-muted">Перевод</label>
+                    <Input
                       value={entry.translation}
                       onChange={(event) => handleEntryChange(entry.id, 'translation', event.target.value)}
-                      className="w-full rounded-md bg-zinc-950/60 border border-white/10 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                      className="h-9"
                       disabled={disabled}
                     />
                   </div>
                   <div className="md:col-span-5">
-                    <label className="block text-xs text-zinc-500 mb-1">Подсказка</label>
-                    <input
+                    <label className="mb-1 block text-xs text-muted">Подсказка</label>
+                    <Input
                       value={entry.notes || ''}
                       onChange={(event) => handleEntryChange(entry.id, 'notes', event.target.value)}
-                      className="w-full rounded-md bg-zinc-950/60 border border-white/10 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                      className="h-9"
                       disabled={disabled}
                     />
                   </div>
-                  <div className="md:col-span-1 flex items-end justify-end">
+                  <div className="flex items-end justify-end md:col-span-1">
                     <Button
                       type="button"
                       variant="ghost"
-                      className="text-xs text-zinc-400 hover:text-red-400"
+                      className="text-xs text-muted hover:text-red-500"
                       onClick={() => handleRemoveEntry(entry.id)}
                       disabled={disabled}
                     >
@@ -390,7 +392,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
                 type="button"
                 onClick={handleSave}
                 disabled={disabled}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                isLoading={isSaving}
               >
                 {isSaving ? 'Сохраняем...' : 'Сохранить в словарь'}
               </Button>

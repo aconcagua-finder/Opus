@@ -132,15 +132,15 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12" suppressHydrationWarning>
       <div className="w-full max-w-md" suppressHydrationWarning>
         {/* Logo */}
-        <div className="text-center mb-6 sm:mb-8" suppressHydrationWarning>
+        <div className="mb-6 text-center sm:mb-8" suppressHydrationWarning>
           <Link href="/" className="inline-block">
             <h1 className="text-3xl sm:text-4xl font-bold gradient-text-cyan">Opus</h1>
           </Link>
-          <p className="text-zinc-500 mt-2 text-sm sm:text-base">Создайте аккаунт</p>
+          <p className="mt-2 text-sm text-muted sm:text-base">Создайте аккаунт</p>
         </div>
 
         {/* Register Card */}
-        <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
+        <Card>
           <CardHeader className="space-y-1 px-4 sm:px-6">
             <CardTitle className="text-xl sm:text-2xl text-center">Регистрация</CardTitle>
             <CardDescription className="text-center text-sm sm:text-base">
@@ -157,7 +157,7 @@ export default function RegisterPage() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-zinc-400">
+                <label htmlFor="name" className="text-sm font-medium text-muted">
                   Полное имя
                 </label>
                 <Input
@@ -174,12 +174,12 @@ export default function RegisterPage() {
                   }
                 />
                 {errors.name && (
-                  <p className="text-xs text-destructive">{errors.name.message}</p>
+                  <p className="text-xs text-red-500">{errors.name.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-zinc-400">
+                <label htmlFor="email" className="text-sm font-medium text-muted">
                   Электронная почта
                 </label>
                 <Input
@@ -196,12 +196,12 @@ export default function RegisterPage() {
                   }
                 />
                 {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email.message}</p>
+                  <p className="text-xs text-red-500">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-zinc-400">
+                <label htmlFor="password" className="text-sm font-medium text-muted">
                   Пароль
                 </label>
                 <Input
@@ -226,25 +226,25 @@ export default function RegisterPage() {
                         <div
                           key={level}
                           className={`h-1 flex-1 rounded-full transition-colors ${
-                            level <= passwordStrength ? getPasswordStrengthColor() : 'bg-zinc-800'
+                            level <= passwordStrength ? getPasswordStrengthColor() : 'bg-surface-muted'
                           }`}
                         />
                       ))}
                     </div>
                     {passwordStrength > 0 && (
-                      <p className={`text-xs ${passwordStrength >= 3 ? 'text-cyan-500' : passwordStrength === 2 ? 'text-yellow-500' : 'text-red-500'}`}>
+                      <p className={`text-xs ${passwordStrength >= 3 ? 'text-accent' : passwordStrength === 2 ? 'text-amber-500' : 'text-red-500'}`}>
                         Надёжность пароля: {getPasswordStrengthText()}
                       </p>
                     )}
                   </div>
                 )}
                 {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password.message}</p>
+                  <p className="text-xs text-red-500">{errors.password.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-400">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-muted">
                   Подтвердите пароль
                 </label>
                 <Input
@@ -261,7 +261,7 @@ export default function RegisterPage() {
                   }
                 />
                 {errors.confirmPassword && (
-                  <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+                  <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>
                 )}
               </div>
 
@@ -270,16 +270,16 @@ export default function RegisterPage() {
                   type="checkbox"
                   id="terms"
                   required
-                  className="mt-1 rounded border-gray-600 bg-transparent"
+                  className="mt-1 rounded border-subtle bg-surface-muted text-accent focus:ring focus:ring-[var(--accent-primary)] focus:ring-opacity-40"
                   disabled={isLoading}
                 />
-                <label htmlFor="terms" className="text-xs sm:text-sm text-zinc-500">
+                <label htmlFor="terms" className="text-xs text-muted sm:text-sm">
                   Я согласен с{' '}
-                  <Link href="/terms" className="text-cyan-500 hover:underline">
+                  <Link href="/terms" className="text-accent hover:underline">
                     Условиями использования
                   </Link>{' '}
                   и{' '}
-                  <Link href="/privacy" className="text-cyan-500 hover:underline">
+                  <Link href="/privacy" className="text-accent hover:underline">
                     Политикой конфиденциальности
                   </Link>
                 </label>
@@ -289,7 +289,8 @@ export default function RegisterPage() {
             <CardFooter className="flex flex-col space-y-4 px-4 sm:px-6">
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg shadow-cyan-500/20 transition-all"
+                className="w-full"
+                variant="gradient"
                 size="lg"
                 isLoading={isLoading}
               >
@@ -298,10 +299,10 @@ export default function RegisterPage() {
 
               <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/10" />
+                  <span className="w-full border-t border-subtle" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-black px-2 text-zinc-500 text-xs">Или продолжить через</span>
+                  <span className="bg-app px-2 text-xs text-muted">Или продолжить через</span>
                 </div>
               </div>
 
@@ -310,7 +311,7 @@ export default function RegisterPage() {
                 variant="outline"
                 disabled={isLoading}
                 onClick={handleGoogleSignIn}
-                className="w-full bg-transparent text-zinc-300 border border-zinc-800 hover:bg-zinc-900 transition-all"
+                className="w-full text-muted"
               >
                 <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"/>
@@ -318,9 +319,9 @@ export default function RegisterPage() {
                 Продолжить с Google
               </Button>
 
-              <p className="text-center text-sm text-zinc-500">
+              <p className="text-center text-sm text-muted">
                 Уже есть аккаунт?{' '}
-                <Link href="/login" className="text-cyan-500 hover:text-cyan-400">
+                <Link href="/login" className="text-accent hover:opacity-80">
                   Войти
                 </Link>
               </p>

@@ -85,7 +85,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
     return (
       <div
         key={list.id}
-        className={`flex items-center justify-between p-3 rounded-lg bg-zinc-950/50 border border-zinc-800 hover:border-zinc-700 transition-colors ${
+        className={`flex items-center justify-between rounded-lg border border-subtle bg-surface-muted p-3 transition-colors hover:border-[var(--accent-primary)] ${
           list.isArchived ? 'opacity-70 hover:opacity-90' : ''
         }`}
         style={
@@ -100,20 +100,20 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-white font-medium truncate max-w-[200px] sm:max-w-[280px]">
+            <h4 className="text-primary font-medium truncate max-w-[200px] sm:max-w-[280px]">
               {list.name}
             </h4>
-            <span className="text-xs text-zinc-500 shrink-0">
+            <span className="text-xs text-muted shrink-0">
               {(list.wordCount ?? 0)} слов
             </span>
             {list.isArchived && (
-              <span className="inline-flex items-center rounded-full border border-zinc-700 px-2 py-0.5 text-[10px] uppercase tracking-widest text-zinc-400">
+              <span className="inline-flex items-center rounded-full border border-subtle px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted">
                 Архив
               </span>
             )}
           </div>
           {list.description && (
-            <p className="text-sm text-zinc-400 truncate mt-1">
+            <p className="text-sm text-muted truncate mt-1">
               {list.description}
             </p>
           )}
@@ -126,7 +126,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             size="sm"
             onClick={() => handleEdit(list.id)}
             disabled={isLoading}
-            className="text-cyan-400 hover:text-cyan-300"
+            className="text-accent hover:text-accent"
           >
             Изменить
           </Button>
@@ -139,8 +139,8 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             disabled={isLoading}
             className={
               list.isArchived
-                ? 'text-zinc-400 hover:text-zinc-200'
-                : 'text-zinc-400 hover:text-zinc-300'
+                ? 'text-muted hover:text-primary'
+                : 'text-muted hover:text-secondary'
             }
           >
             {list.isArchived ? 'Восстановить' : 'Архивировать'}
@@ -148,7 +148,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
 
           {isDeleting ? (
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-zinc-400">Удалить?</span>
+              <span className="text-muted">Удалить?</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -165,7 +165,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
                 size="sm"
                 onClick={() => setDeletingId(null)}
                 disabled={isLoading}
-                className="text-zinc-400 hover:text-zinc-300"
+                className="text-muted hover:text-secondary"
               >
                 Нет
               </Button>
@@ -281,10 +281,10 @@ export function WordListManager({ onClose }: WordListManagerProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-white">
+        <h2 className="text-2xl font-semibold text-primary">
           {editingId ? 'Редактирование списка' : 'Управление списками'}
         </h2>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-muted">
           {editingId
             ? 'Измените название, описание или цвет списка'
             : 'Создавайте и управляйте своими списками слов'}
@@ -292,16 +292,16 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       </div>
 
       {/* Форма создания/редактирования */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-surface-muted border-subtle">
         <CardHeader>
-          <CardTitle className="text-white text-base">
+          <CardTitle className="text-primary text-base">
             {editingId ? 'Редактировать список' : 'Создать новый список'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={editingId ? handleUpdate : handleCreate} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Название списка *
               </label>
               <Input
@@ -314,7 +314,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Описание (опционально)
               </label>
               <Input
@@ -327,7 +327,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Цвет метки
               </label>
               <div className="flex flex-wrap gap-3">
@@ -379,7 +379,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
                   variant="ghost"
                   onClick={handleCancelEdit}
                   disabled={isLoading}
-                  className="text-zinc-300 hover:text-white"
+                  className="text-secondary hover:text-primary"
                 >
                   Отмена
                 </Button>
@@ -390,9 +390,9 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       </Card>
 
       {autoLists.length > 0 && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-surface-muted border-subtle">
           <CardHeader>
-            <CardTitle className="text-white text-base">
+            <CardTitle className="text-primary text-base">
               Системные списки ({autoLists.length})
             </CardTitle>
           </CardHeader>
@@ -400,15 +400,15 @@ export function WordListManager({ onClose }: WordListManagerProps) {
             {autoLists.map((list) => (
               <div
                 key={list.id}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2"
+                className="flex items-center justify-between rounded-lg border border-subtle bg-surface-muted px-3 py-2"
               >
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-white">{list.name}</span>
+                  <span className="text-sm font-medium text-primary">{list.name}</span>
                   {list.description && (
-                    <span className="text-xs text-zinc-500">{list.description}</span>
+                    <span className="text-xs text-muted">{list.description}</span>
                   )}
                 </div>
-                <span className="text-xs text-zinc-400 whitespace-nowrap">
+                <span className="text-xs text-muted whitespace-nowrap">
                   {list.wordCount ?? 0} слов
                 </span>
               </div>
@@ -419,9 +419,9 @@ export function WordListManager({ onClose }: WordListManagerProps) {
 
       {/* Список существующих списков */}
       {customLists.length > 0 && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-surface-muted border-subtle">
           <CardHeader>
-            <CardTitle className="text-white text-base">
+            <CardTitle className="text-primary text-base">
               Мои списки ({customLists.length})
             </CardTitle>
           </CardHeader>
@@ -432,9 +432,9 @@ export function WordListManager({ onClose }: WordListManagerProps) {
       )}
 
       {archivedLists.length > 0 && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-surface-muted border-subtle">
           <CardHeader>
-            <CardTitle className="text-white text-base">
+            <CardTitle className="text-primary text-base">
               Архив ({archivedLists.length})
             </CardTitle>
           </CardHeader>
@@ -446,8 +446,8 @@ export function WordListManager({ onClose }: WordListManagerProps) {
 
       {customLists.length === 0 && archivedLists.length === 0 && !editingId && (
         <div className="text-center py-8">
-          <p className="text-zinc-400 mb-2">У вас пока нет пользовательских списков</p>
-          <p className="text-sm text-zinc-500">
+          <p className="text-muted mb-2">У вас пока нет пользовательских списков</p>
+          <p className="text-sm text-muted">
             Создайте первый список, чтобы начать организовывать свои слова
           </p>
         </div>
@@ -458,7 +458,7 @@ export function WordListManager({ onClose }: WordListManagerProps) {
           type="button"
           variant="outline"
           onClick={onClose}
-          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          className="text-secondary hover:bg-surface-muted"
         >
           Закрыть
         </Button>

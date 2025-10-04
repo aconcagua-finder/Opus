@@ -19,8 +19,7 @@ export {
   DictionaryViewMode,
   DictionaryListContentMode,
   WordListType,
-  WORD_LIST_TYPE_NAMES,
-  WORD_LIST_TYPE_ICONS
+  WORD_LIST_TYPE_NAMES
 } from './types'
 
 // API

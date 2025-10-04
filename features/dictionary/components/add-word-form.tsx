@@ -9,8 +9,10 @@ import { Language, DictionaryEntry } from '../types'
 import { LanguageSelector } from './language-selector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Alert } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { cn } from '@/lib/utils'
 
 interface AddWordFormProps {
   mode?: 'create' | 'edit'
@@ -226,15 +228,15 @@ export function AddWordForm({
   const formContent = (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <Alert className="bg-red-950/50 border-red-900/50 text-red-200">
-          {error}
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {/* Языки */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-muted">
             Язык слова *
           </label>
           <LanguageSelector
@@ -248,7 +250,7 @@ export function AddWordForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-muted">
             Язык перевода *
           </label>
           <LanguageSelector
@@ -265,7 +267,7 @@ export function AddWordForm({
       {/* Слово и перевод */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-muted">
             Слово *
           </label>
           <Input
@@ -279,7 +281,7 @@ export function AddWordForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-muted">
             Перевод *
           </label>
           <Input
@@ -295,20 +297,20 @@ export function AddWordForm({
 
       {/* Подсказка */}
       <div>
-        <label className="block text-sm font-medium text-zinc-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-muted">
           Подсказка (необязательно)
         </label>
-        <textarea
+        <Textarea
           {...register('notes')}
           placeholder="Добавьте короткий пример употребления, например: Yo no veo fútbol — Я не смотрю футбол"
-          className="flex w-full rounded-md bg-zinc-950/50 backdrop-blur-md border border-white/20 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-none"
+          className="min-h-[80px] resize-none"
         />
         {errors.notes && (
           <p className="mt-1 text-sm text-red-400">{errors.notes.message}</p>
         )}
       </div>
       {/* Кнопки */}
-      <div className="flex items-center justify-end space-x-3 pt-4">
+      <div className="flex items-center justify-end gap-3 pt-4">
         {onCancel && (
           <Button
             type="button"
@@ -322,7 +324,7 @@ export function AddWordForm({
         <Button
           type="submit"
           disabled={isSubmitting || isLoading}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white"
+          isLoading={isSubmitting || isLoading}
         >
           {isSubmitting
             ? isEditMode ? 'Сохраняем...' : 'Добавляем...'
@@ -337,9 +339,9 @@ export function AddWordForm({
   }
 
   return (
-    <Card className={`bg-zinc-950/50 border-zinc-800/50 backdrop-blur ${isEditMode ? 'border-cyan-600/40 shadow-[0_0_20px_rgba(8,145,178,0.25)]' : ''}`}>
+    <Card className={cn('transition-colors', isEditMode && 'ring-1 ring-[var(--accent-primary)] shadow-accent')}>
       <CardHeader>
-        <CardTitle className="text-white">
+        <CardTitle className="text-primary">
           {isEditMode ? 'Редактировать слово' : 'Добавить слово (вручную)'}
         </CardTitle>
       </CardHeader>
