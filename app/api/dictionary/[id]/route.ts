@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { updateDictionaryEntrySchema } from '@/features/dictionary'
+import type { UpdateDictionaryEntryInput } from '@/features/dictionary'
 
 export async function GET(
   request: NextRequest,
@@ -105,7 +106,7 @@ export async function PUT(
     }
 
     // Обновление записи
-    const updateData: any = { ...validatedData }
+    const updateData: UpdateDictionaryEntryInput = { ...validatedData }
     if (updateData.word) {
       updateData.word = updateData.word.toLowerCase()
     }

@@ -87,7 +87,7 @@ export function useAuth(options: UseAuthOptions = {}): UseAuthReturn {
   useEffect(() => {
     if (!isLoading && isAuthenticated && requiredRoles.length > 0) {
       const hasRequiredRole = requiredRoles.some(role => 
-        user?.role === role || user?.roles?.includes(role as any)
+        user?.role === role || user?.roles?.includes(role)
       )
       
       if (!hasRequiredRole) {
@@ -148,7 +148,7 @@ export function useAuth(options: UseAuthOptions = {}): UseAuthReturn {
     if (!roles || roles.length === 0) return true
     
     return roles.some(role => 
-      user.role === role || user.roles?.includes(role as any)
+      user.role === role || user.roles?.includes(role)
     )
   }, [isAuthenticated, user])
 

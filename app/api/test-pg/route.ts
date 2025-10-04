@@ -7,7 +7,12 @@ export async function GET() {
     'postgresql://postgres:anypass@127.0.0.1:5432/opus_language',
   ]
   
-  const results = []
+  const results: Array<{
+    url: string
+    success: boolean
+    time?: unknown
+    error?: string
+  }> = []
   
   for (const url of urls) {
     const client = new Client({ connectionString: url })
@@ -26,8 +31,9 @@ export async function GET() {
         workingUrl: url.replace(/postgres:.*@/, 'postgres:***@'),
         results 
       })
-    } catch (error: any) {
-      results.push({ url: url.replace(/postgres:.*@/, 'postgres:***@'), success: false, error: error.message })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      results.push({ url: url.replace(/postgres:.*@/, 'postgres:***@'), success: false, error: message })
     }
   }
   

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,7 +20,6 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const router = useRouter()
   const { login } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -68,7 +66,8 @@ export default function LoginPage() {
       } else if (result?.url) {
         window.location.href = result.url
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Google sign-in failed:', error)
       setError('Ошибка входа через Google')
       setIsLoading(false)
     }

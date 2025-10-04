@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useDictionaryStore } from '../stores/dictionary-store'
 import { useDictionaryPreferencesStore } from '../stores/dictionary-preferences-store'
 import {
@@ -10,39 +10,56 @@ import {
 } from '../types'
 
 export const useDictionary = () => {
-  const store = useDictionaryStore()
+  const {
+    entries,
+    stats,
+    isLoading,
+    error,
+    filters,
+    pagination,
+    setFilters,
+    setError,
+    fetchEntries,
+    fetchStats,
+    createEntry,
+    updateEntry,
+    deleteEntry,
+    importEntries,
+    refreshEntries,
+    shuffleEntries,
+  } = useDictionaryStore()
+  const hasInitializedRef = useRef(false)
 
-  // Автоматическая загрузка данных при первом использовании
   useEffect(() => {
-    if (store.entries.length === 0 && !store.isLoading) {
-      store.fetchEntries()
-      store.fetchStats()
+    if (hasInitializedRef.current) {
+      return
     }
-  }, [])
+
+    if (!isLoading) {
+      hasInitializedRef.current = true
+      void fetchEntries()
+      void fetchStats()
+    }
+  }, [isLoading, fetchEntries, fetchStats])
 
   return {
-    // State
-    entries: store.entries,
-    stats: store.stats,
-    isLoading: store.isLoading,
-    error: store.error,
-    filters: store.filters,
-    pagination: store.pagination,
-
-    // Actions
-    setFilters: store.setFilters,
-    createEntry: store.createEntry,
-    updateEntry: store.updateEntry,
-    deleteEntry: store.deleteEntry,
-    importEntries: store.importEntries,
-    refreshEntries: store.refreshEntries,
-    fetchEntries: store.fetchEntries,
-    shuffleEntries: store.shuffleEntries,
-    clearError: () => store.setError(null),
-
-    // Computed values
-    hasEntries: store.entries.length > 0,
-    isEmpty: store.entries.length === 0 && !store.isLoading,
+    entries,
+    stats,
+    isLoading,
+    error,
+    filters,
+    pagination,
+    setFilters,
+    createEntry,
+    updateEntry,
+    deleteEntry,
+    importEntries,
+    refreshEntries,
+    fetchEntries,
+    shuffleEntries,
+    clearError: () => setError(null),
+    hasEntries: entries.length > 0,
+    isEmpty: entries.length === 0 && !isLoading,
   }
 }
 
@@ -79,7 +96,7 @@ export const useDictionaryPagination = () => {
 export const useDictionaryFilters = () => {
   const { filters, setFilters } = useDictionary()
 
-  const updateFilter = (key: keyof DictionaryFilters, value: any) => {
+  const updateFilter = <K extends keyof DictionaryFilters>(key: K, value: DictionaryFilters[K]) => {
     setFilters({
       ...filters,
       [key]: value,

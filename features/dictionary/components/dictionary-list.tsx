@@ -302,8 +302,8 @@ export function DictionaryList({ onEditWord }: DictionaryListProps) {
                   aria-pressed={listContentMode === DictionaryListContentMode.TRANSLATION_ONLY}
                   className={
                     listContentMode === DictionaryListContentMode.TRANSLATION_ONLY
-                      ? 'bg-cyan-600 hover:bg-cyan-700'
-                      : 'text-зinc-300 hover:text-cyan-300'
+                    ? 'bg-cyan-600 hover:bg-cyan-700'
+                    : 'text-zinc-300 hover:text-cyan-300'
                   }
                 >
                   Только перевод

@@ -1,19 +1,23 @@
-const { Client } = require('pg')
-const dns = require('dns').promises
+import { Client, ClientConfig } from 'pg'
+import dns from 'dns/promises'
 
-async function testConnection() {
+type ConnectionConfig = {
+  name: string
+  config: ClientConfig
+}
+
+async function testConnection(): Promise<boolean> {
   console.log('=== PostgreSQL Connection Test ===\n')
-  
-  // First, check DNS resolution
+
   try {
     const addresses = await dns.resolve4('localhost')
     console.log('✓ localhost resolves to:', addresses)
-  } catch (e) {
-    console.log('✗ DNS resolution failed:', e.message)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.log('✗ DNS resolution failed:', message)
   }
-  
-  // Test different connection methods
-  const connections = [
+
+  const connections: ConnectionConfig[] = [
     {
       name: 'Trust without password (config object)',
       config: {
@@ -21,8 +25,7 @@ async function testConnection() {
         port: 5432,
         database: 'opus_language',
         user: 'postgres',
-        // No password!
-      }
+      },
     },
     {
       name: 'With postgres password',
@@ -31,8 +34,8 @@ async function testConnection() {
         port: 5432,
         database: 'opus_language',
         user: 'postgres',
-        password: 'postgres'
-      }
+        password: 'postgres',
+      },
     },
     {
       name: 'Using 127.0.0.1 instead of localhost',
@@ -41,22 +44,22 @@ async function testConnection() {
         port: 5432,
         database: 'opus_language',
         user: 'postgres',
-      }
+      },
     },
     {
       name: 'Connection string without password',
       config: {
-        connectionString: 'postgresql://postgres@localhost:5432/opus_language'
-      }
-    }
+        connectionString: 'postgresql://postgres@localhost:5432/opus_language',
+      },
+    },
   ]
-  
-  for (const conn of connections) {
-    console.log(`\n⏳ Testing: ${conn.name}`)
-    console.log('   Config:', JSON.stringify(conn.config, null, 2))
-    
-    const client = new Client(conn.config)
-    
+
+  for (const connection of connections) {
+    console.log(`\n⏳ Testing: ${connection.name}`)
+    console.log('   Config:', JSON.stringify(connection.config, null, 2))
+
+    const client = new Client(connection.config)
+
     try {
       await client.connect()
       const res = await client.query('SELECT NOW(), current_user, inet_server_addr()')
@@ -64,36 +67,37 @@ async function testConnection() {
       console.log('      Time:', res.rows[0].now)
       console.log('      User:', res.rows[0].current_user)
       console.log('      Server:', res.rows[0].inet_server_addr)
-      
-      // Test table access
+
       const tableCheck = await client.query('SELECT COUNT(*) FROM users')
       console.log('      Users table count:', tableCheck.rows[0].count)
-      
+
       await client.end()
-      
+
       console.log('\n🎉 DATABASE CONNECTION WORKING! 🎉')
       console.log('   Use this connection config in your app:\n')
       console.log('   DATABASE_URL="postgresql://postgres@localhost:5432/opus_language?schema=public"')
       return true
     } catch (error) {
-      console.log('   ❌ Failed:', error.message)
-      if (error.code) {
-        console.log('      Error code:', error.code)
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      const code = error instanceof Error && 'code' in error ? String((error as { code?: unknown }).code) : undefined
+      console.log('   ❌ Failed:', message)
+      if (code) {
+        console.log('      Error code:', code)
       }
     }
   }
-  
+
   console.log('\n❌ ALL CONNECTION ATTEMPTS FAILED ❌')
   console.log('   Check that Docker container is running: docker ps')
   console.log('   Check container logs: docker logs opus-postgres')
   return false
 }
 
-testConnection()
-  .then((success) => {
-    process.exit(success ? 0 : 1)
-  })
-  .catch((err) => {
-    console.error('Unexpected error:', err)
-    process.exit(1)
-  })
+void testConnection().then((success) => {
+  if (!success) {
+    process.exitCode = 1
+  }
+}).catch((error) => {
+  console.error('Unexpected error:', error)
+  process.exitCode = 1
+})

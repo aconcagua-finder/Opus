@@ -156,7 +156,7 @@ model DictionaryEntry {
   targetLanguage Language @map("target_language")
   
   // Дополнительные поля
-  notes        String?  // Заметки пользователя
+  notes        String?  // Подсказка пользователя (пример употребления)
   difficulty   Int?     @default(0) // Уровень сложности (0-5)
   
   // Статистика изучения

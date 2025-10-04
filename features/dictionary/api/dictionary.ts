@@ -47,6 +47,7 @@ export interface DictionaryAPI {
     text: string
     sourceLanguage: Language
     targetLanguage: Language
+    detectPhrases?: boolean
   }) => Promise<CreateDictionaryEntryData[]>
 
   // Массовое сохранение записей
@@ -56,16 +57,33 @@ export interface DictionaryAPI {
   }>
 }
 
-const buildQueryParams = (params: Record<string, any>): string => {
+type QueryParamValue = string | number | boolean | null | undefined
+
+const buildQueryParams = (params: Record<string, QueryParamValue>): string => {
   const searchParams = new URLSearchParams()
   
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      searchParams.append(key, String(value))
+    if (value === undefined || value === null) {
+      return
     }
+
+    if (typeof value === 'string' && value.trim() === '') {
+      return
+    }
+
+    searchParams.append(key, String(value))
   })
   
   return searchParams.toString()
+}
+
+const parseErrorResponse = async (response: Response): Promise<string | undefined> => {
+  try {
+    const body = (await response.json()) as { error?: string }
+    return body.error
+  } catch {
+    return undefined
+  }
 }
 
 export const dictionaryAPI: DictionaryAPI = {
@@ -83,8 +101,8 @@ export const dictionaryAPI: DictionaryAPI = {
     const response = await fetch(url)
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch dictionary entries')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to fetch dictionary entries')
     }
     
     return response.json()
@@ -94,8 +112,8 @@ export const dictionaryAPI: DictionaryAPI = {
     const response = await fetch(`${API_BASE}/${id}`)
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch dictionary entry')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to fetch dictionary entry')
     }
     
     return response.json()
@@ -111,8 +129,8 @@ export const dictionaryAPI: DictionaryAPI = {
     })
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create dictionary entry')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to create dictionary entry')
     }
     
     return response.json()
@@ -128,8 +146,8 @@ export const dictionaryAPI: DictionaryAPI = {
     })
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update dictionary entry')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to update dictionary entry')
     }
     
     return response.json()
@@ -141,8 +159,8 @@ export const dictionaryAPI: DictionaryAPI = {
     })
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete dictionary entry')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to delete dictionary entry')
     }
     
     // DELETE endpoint возвращает только сообщение об успехе
@@ -152,25 +170,29 @@ export const dictionaryAPI: DictionaryAPI = {
     const response = await fetch(`${API_BASE}/stats`)
     
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch dictionary stats')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Failed to fetch dictionary stats')
     }
     
     return response.json()
   },
 
   async generateEntries(payload) {
+    const { detectPhrases = false, ...rest } = payload
     const response = await fetch(`${API_BASE}/ai/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...rest,
+        detectPhrases,
+      }),
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(error.error || 'Не удалось сгенерировать список слов')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Не удалось сгенерировать список слов')
     }
 
     const data = await response.json()
@@ -187,8 +209,8 @@ export const dictionaryAPI: DictionaryAPI = {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(error.error || 'Не удалось сохранить список слов')
+      const errorMessage = await parseErrorResponse(response)
+      throw new Error(errorMessage || 'Не удалось сохранить список слов')
     }
 
     return response.json()

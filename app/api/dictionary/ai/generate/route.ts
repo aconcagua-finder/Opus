@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { Language } from '@prisma/client'
+import {
+  DICTIONARY_AI_MODEL,
+  DICTIONARY_AI_RESPONSE_FORMAT,
+  buildDictionaryAiSystemPrompt,
+  buildDictionaryAiUserPrompt,
+} from '@/features/dictionary/prompts/ai-import'
 
 const MAX_TEXT_BYTES = 2 * 1024 * 1024 // 2 MiB
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
-const DEFAULT_MODEL = process.env.OPENAI_DICTIONARY_MODEL || 'gpt-5-mini'
-
 const requestSchema = z.object({
   text: z.string().min(1, 'Text is required'),
   sourceLanguage: z.nativeEnum(Language),
   targetLanguage: z.nativeEnum(Language),
+  detectPhrases: z.boolean().default(false),
 })
 
+const trimmedString = () =>
+  z
+    .string()
+    .transform((value) => value.trim())
+    .refine((value) => value.length > 0, {
+      message: 'String must not be empty after trimming',
+    })
+
 const generatedEntrySchema = z.object({
-  word: z.string().min(1),
-  translation: z.string().min(1),
-  notes: z.string(),
+  word: trimmedString(),
+  translation: trimmedString(),
+  notes: trimmedString(),
 })
 
 type GeneratedEntry = z.infer<typeof generatedEntrySchema>
@@ -77,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     const json = await request.json()
-    const { text, sourceLanguage, targetLanguage } = requestSchema.parse(json)
+    const { text, sourceLanguage, targetLanguage, detectPhrases } = requestSchema.parse(json)
 
     if (sourceLanguage === targetLanguage) {
       return NextResponse.json(
@@ -93,32 +106,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const systemPrompt = `You are an assistant that extracts foreign language vocabulary pairs.
-Always reply with a JSON array of objects that strictly match this TypeScript type:
+    const systemPrompt = buildDictionaryAiSystemPrompt({
+      sourceLanguage,
+      targetLanguage,
+      detectPhrases,
+    })
 
-type VocabularyItem = {
-  word: string // unique vocabulary item in the source language, lowercased unless proper noun
-  translation: string // natural translation in the target language
-  notes?: string // optional usage note or short example (${sourceLanguage} or ${targetLanguage}), <= 120 chars
-}
-
-Rules:
-- Work with the provided source and target languages.
-- Extract up to 50 of the most useful unique vocabulary items.
-- Focus on single words or very short multi-word expressions (<= 3 words).
-- Ignore numbers, URLs, email addresses, gibberish, or duplicates.
-- Normalise words to dictionary form when possible.
-- Preserve proper nouns (names, places) with correct casing.
-- If nothing suitable is found, return an empty array [] without additional text.
-- DO NOT wrap the JSON answer in markdown code fences or add explanations.`
-
-    const userPrompt = `Source language: ${sourceLanguage}
-Target language: ${targetLanguage}
-
-Text:
-"""
-${text}
-"""`
+    const userPrompt = buildDictionaryAiUserPrompt({
+      sourceLanguage,
+      targetLanguage,
+      text,
+      detectPhrases,
+    })
 
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
@@ -127,7 +126,7 @@ ${text}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: DEFAULT_MODEL,
+        model: DICTIONARY_AI_MODEL,
         messages: [
           {
             role: 'system',
@@ -140,34 +139,7 @@ ${text}
         ],
         max_completion_tokens: 4000,
         reasoning_effort: "low",
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'vocabulary_items',
-            strict: true,
-            schema: {
-              type: 'object',
-              additionalProperties: false,
-              required: ['entries'],
-              properties: {
-                entries: {
-                  type: 'array',
-                  maxItems: 50,
-                  items: {
-                    type: 'object',
-                    additionalProperties: false,
-                    required: ['word', 'translation', 'notes'],
-                    properties: {
-                      word: { type: 'string', minLength: 1, maxLength: 100 },
-                      translation: { type: 'string', minLength: 1, maxLength: 200 },
-                      notes: { type: 'string', maxLength: 500 },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        response_format: DICTIONARY_AI_RESPONSE_FORMAT,
       }),
     })
 
@@ -196,7 +168,10 @@ ${text}
       )
     }
 
-    const candidateEntries = (structured as any)?.entries ?? structured
+    const candidateEntries =
+      typeof structured === 'object' && structured !== null && 'entries' in structured
+        ? (structured as { entries: unknown }).entries
+        : structured
 
     const validated = z.array(generatedEntrySchema).safeParse(candidateEntries)
     if (!validated.success) {
@@ -207,11 +182,13 @@ ${text}
       )
     }
 
-    const entries: GeneratedEntry[] = validated.data.map((item) => ({
-      word: item.word.trim(),
-      translation: item.translation.trim(),
-      notes: item.notes?.trim() || '',
-    })).filter((item) => item.word && item.translation)
+    const entries: GeneratedEntry[] = validated.data
+      .map((item) => ({
+        word: item.word,
+        translation: item.translation,
+        notes: item.notes,
+      }))
+      .filter((item) => item.word && item.translation)
 
     const enriched = entries.map((entry) => ({
       ...entry,

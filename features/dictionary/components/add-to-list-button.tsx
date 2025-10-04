@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useWordLists } from '../hooks/use-word-lists'
 import { Button } from '@/components/ui/button'
@@ -44,7 +44,7 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
     }
   }, [entryId, ensureLists, getListsForEntry, isOpen])
 
-  const updateMenuPosition = () => {
+  const updateMenuPosition = useCallback(() => {
     if (!isOpen || typeof window === 'undefined') {
       setMenuPosition(null)
       return
@@ -68,7 +68,7 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
     )
 
     setMenuPosition({ top: computedTop, left: computedLeft })
-  }
+  }, [isOpen])
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -87,7 +87,7 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('scroll', handleScroll, true)
     }
-  }, [isOpen])
+  }, [isOpen, updateMenuPosition])
 
   // Закрытие по клику вне элемента
   useEffect(() => {
@@ -188,8 +188,8 @@ export function AddToListButton({ entryId, compact = false }: AddToListButtonPro
               </div>
             ) : customLists.length === 0 ? (
               <div className="p-4 text-center">
-                <p className="text-sm text-зinc-400 mb-2">Нет доступных списков</p>
-                <p className="text-xs text-зinc-500">
+                <p className="text-sm text-zinc-400 mb-2">Нет доступных списков</p>
+                <p className="text-xs text-zinc-500">
                   Создайте список в управлении списками
                 </p>
               </div>

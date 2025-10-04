@@ -177,7 +177,7 @@ export function AuthGuard({
   // Проверка ролей
   if (requiredRoles.length > 0) {
     const hasRequiredRole = requiredRoles.some(role => 
-      user?.role === role || user?.roles?.includes(role as any)
+      user?.role === role || user?.roles?.includes(role)
     )
     
     if (!hasRequiredRole) {

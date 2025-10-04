@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { devtools } from 'zustand/middleware'
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig } from 'axios'
 import {
   SafeUser,
   AuthTokens,
@@ -248,7 +248,7 @@ export const useAuthStore = create<AuthState>()(
             if (error.response?.status === 401 && tokens.refreshToken) {
               try {
                 await get().refreshToken()
-              } catch (refreshError) {
+              } catch {
                 get()._clearAuth()
               }
             } else {
@@ -287,10 +287,16 @@ export const useAuthStore = create<AuthState>()(
 )
 
 // Интерсептор для автоматического обновления токена
+type RetriableRequestConfig = AxiosRequestConfig & { _retry?: boolean }
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as any
+    const originalRequest = error.config as RetriableRequestConfig | undefined
+
+    if (!originalRequest) {
+      return Promise.reject(error)
+    }
     
     if (
       error.response?.status === 401 &&
@@ -307,7 +313,7 @@ apiClient.interceptors.response.use(
           originalRequest.headers['Authorization'] = `Bearer ${tokens.accessToken}`
           return apiClient(originalRequest)
         }
-      } catch (refreshError) {
+      } catch {
         // Токен обновить не удалось, перенаправление на страницу входа
         useAuthStore.getState()._clearAuth()
         

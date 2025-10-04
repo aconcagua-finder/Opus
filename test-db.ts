@@ -1,16 +1,16 @@
-const { Client } = require('pg')
+import { Client } from 'pg'
 
-async function testConnection() {
+async function testConnection(): Promise<void> {
   const urls = [
     'postgresql://postgres@localhost:5432/opus_language',
     'postgresql://postgres:postgres@localhost:5432/opus_language',
     'postgresql://postgres:anypass@localhost:5432/opus_language',
   ]
-  
+
   for (const url of urls) {
     console.log(`\nTesting: ${url}`)
     const client = new Client({ connectionString: url })
-    
+
     try {
       await client.connect()
       const res = await client.query('SELECT NOW()')
@@ -18,9 +18,10 @@ async function testConnection() {
       await client.end()
       return
     } catch (error) {
-      console.log('❌ Failed:', error.message)
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      console.log('❌ Failed:', message)
     }
   }
 }
 
-testConnection()
+void testConnection()

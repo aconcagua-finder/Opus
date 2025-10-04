@@ -15,11 +15,12 @@ export async function GET() {
       userCount,
       databaseUrl: process.env.DATABASE_URL?.replace(/postgres:.*@/, 'postgres:***@')
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Database connection error:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json({ 
       success: false, 
-      error: error.message,
+      error: message,
       databaseUrl: process.env.DATABASE_URL?.replace(/postgres:.*@/, 'postgres:***@')
     }, { status: 500 })
   }

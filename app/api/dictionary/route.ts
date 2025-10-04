@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createDictionaryEntrySchema, dictionaryFiltersSchema } from '@/features/dictionary'
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const validatedFilters = dictionaryFiltersSchema.parse(filters)
 
     // Построение условий фильтрации
-    const where: any = {
+    const where: Prisma.DictionaryEntryWhereInput = {
       userId,
     }
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       if (validatedFilters.listId.startsWith('auto-')) {
         // Для авто-списков - фильтруем по дате
         const now = new Date()
-        let dateFilter: Date
+        let dateFilter: Date | null = null
 
         if (validatedFilters.listId === 'auto-7-days') {
           dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
           dateFilter = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
         }
 
-        if (dateFilter!) {
+        if (dateFilter) {
           where.createdAt = { gte: dateFilter }
         }
       } else {

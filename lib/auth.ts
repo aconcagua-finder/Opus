@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
+import type { AdapterUser } from 'next-auth/adapters'
 import { prisma } from "@/lib/prisma"
 
 const customPrismaAdapter = PrismaAdapter(prisma)
@@ -8,7 +9,7 @@ const customPrismaAdapter = PrismaAdapter(prisma)
 // Переопределяем метод создания пользователя для маппинга полей
 const adapter = {
   ...customPrismaAdapter,
-  createUser: async (user: any) => {
+  createUser: async (user: AdapterUser) => {
     if (process.env.NODE_ENV === 'development') {
       console.log("NextAuth createUser - Original Google user data:", JSON.stringify(user, null, 2))
     }
@@ -46,6 +47,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      void profile
       if (account?.provider === "google" && user.email) {
         try {
           // Ищем существующего пользователя
@@ -105,6 +107,7 @@ export const authOptions: NextAuthOptions = {
     },
     
     async jwt({ token, user, account }) {
+      void account
       if (process.env.NODE_ENV === 'development') {
         console.log("NextAuth jwt callback - token:", JSON.stringify(token, null, 2))
         console.log("NextAuth jwt callback - user:", JSON.stringify(user, null, 2))

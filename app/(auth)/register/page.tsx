@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -30,7 +29,6 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
-  const router = useRouter()
   const { register: registerUser } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -101,7 +99,8 @@ export default function RegisterPage() {
       } else if (result?.url) {
         window.location.href = result.url
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Google sign-in failed:', error)
       setError('Ошибка входа через Google')
       setIsLoading(false)
     }

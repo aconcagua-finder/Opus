@@ -11,6 +11,36 @@ import { ProtectedNav } from '@/components/navigation/protected-nav'
 import { useDictionaryStore } from '@/features/dictionary/stores/dictionary-store'
 import { getLanguageFlag, Language } from '@/features/dictionary'
 
+const resolveDisplayName = (candidate: unknown): string | null => {
+  if (!candidate || typeof candidate !== 'object') {
+    return null
+  }
+
+  const record = candidate as Record<string, unknown>
+
+  const displayName = record.displayName
+  if (typeof displayName === 'string' && displayName.trim().length > 0) {
+    return displayName
+  }
+
+  const name = record.name
+  if (typeof name === 'string' && name.trim().length > 0) {
+    return name
+  }
+
+  const username = record.username
+  if (typeof username === 'string' && username.trim().length > 0) {
+    return username
+  }
+
+  const email = record.email
+  if (typeof email === 'string' && email.includes('@')) {
+    return email.split('@')[0]
+  }
+
+  return null
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const { user: jwtUser, isLoading: jwtLoading } = useAuth()
@@ -28,13 +58,7 @@ export default function DashboardPage() {
   
   const nextAuthUser = nextAuthSession?.user
   const user = nextAuthUser || jwtUser
-  const displayName = (
-    (user && 'displayName' in user && user.displayName) ||
-    (user && 'name' in user && user.name) ||
-    (user && 'username' in user && (user as any).username) ||
-    user?.email?.split('@')[0] ||
-    'Пользователь'
-  )
+  const displayName = resolveDisplayName(user) ?? 'Пользователь'
 
   const dictionaryStats = useDictionaryStore((state) => state.stats)
   const fetchDictionaryStats = useDictionaryStore((state) => state.fetchStats)

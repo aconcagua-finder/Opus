@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useWordLists } from '../hooks/use-word-lists'
-import { WordListType, WORD_LIST_TYPE_ICONS } from '../types'
+import { WORD_LIST_TYPE_ICONS } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 

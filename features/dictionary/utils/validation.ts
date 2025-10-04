@@ -17,7 +17,7 @@ export const createDictionaryEntrySchema = z.object({
     message: 'Выберите язык перевода'
   }),
   notes: z.string()
-    .max(500, 'Заметки не могут быть длиннее 500 символов')
+    .max(1500, 'Подсказка не может быть длиннее 1500 символов')
     .trim()
     .optional(),
 }).refine(
@@ -42,7 +42,7 @@ export const updateDictionaryEntrySchema = z.object({
     .optional(),
   targetLanguage: z.nativeEnum(Language).optional(),
   notes: z.string()
-    .max(500, 'Заметки не могут быть длиннее 500 символов')
+    .max(1500, 'Подсказка не может быть длиннее 1500 символов')
     .trim()
     .optional(),
 })

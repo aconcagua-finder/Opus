@@ -38,6 +38,14 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [detectPhrases, setDetectPhrases] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    const stored = window.localStorage.getItem('opus.dictionary.ai.detectPhrases')
+    return stored === 'true'
+  })
 
   const textByteLength = useMemo(() => {
     if (!text) return 0
@@ -69,6 +77,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
         text,
         sourceLanguage,
         targetLanguage,
+        detectPhrases,
       })
 
       if (!entries.length) {
@@ -134,14 +143,18 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
     }
 
     const cleaned = generated
-      .map(({ id, ...entry }) => ({
-        ...entry,
-        word: entry.word.trim(),
-        translation: entry.translation.trim(),
-        notes: entry.notes?.trim() || undefined,
-        sourceLanguage,
-        targetLanguage,
-      }))
+      .map((entry) => {
+        const { id: _omitted, ...rest } = entry
+        void _omitted
+        return {
+          ...rest,
+          word: rest.word.trim(),
+          translation: rest.translation.trim(),
+          notes: rest.notes?.trim() || undefined,
+          sourceLanguage,
+          targetLanguage,
+        }
+      })
       .filter((entry) => entry.word && entry.translation)
 
     if (!cleaned.length) {
@@ -174,6 +187,17 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
       }))
     )
   }, [sourceLanguage, targetLanguage])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(
+      'opus.dictionary.ai.detectPhrases',
+      detectPhrases ? 'true' : 'false'
+    )
+  }, [detectPhrases])
 
   return (
     <Card className="bg-zinc-950/50 border-zinc-800/50 backdrop-blur">
@@ -240,6 +264,26 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
           </div>
         </div>
 
+        <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-zinc-950/40 px-3 py-3">
+          <input
+            id="dictionary-ai-detect-phrases"
+            type="checkbox"
+            checked={detectPhrases}
+            disabled={disabled}
+            onChange={(event) => setDetectPhrases(event.target.checked)}
+            className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
+          />
+          <label
+            htmlFor="dictionary-ai-detect-phrases"
+            className="flex flex-col text-sm text-zinc-300 cursor-pointer select-none"
+          >
+            <span className="font-medium">Определять фразы</span>
+            <span className="text-xs text-zinc-500">
+              При включении ИИ ищет устойчивые выражения и коллокации, а «Подсказка» будет содержать короткий пример употребления.
+            </span>
+          </label>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -277,7 +321,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
             </div>
 
             <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-              {generated.map((entry, index) => (
+              {generated.map((entry) => (
                 <div
                   key={entry.id}
                   className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg bg-zinc-900/40 border border-zinc-800/60"
@@ -292,7 +336,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
                     />
                   </div>
                   <div className="md:col-span-3">
-                    <label className="block text-xs text-зinc-500 mb-1">Перевод</label>
+                    <label className="block text-xs text-zinc-500 mb-1">Перевод</label>
                     <input
                       value={entry.translation}
                       onChange={(event) => handleEntryChange(entry.id, 'translation', event.target.value)}
@@ -301,7 +345,7 @@ export function AiImportPanel({ onClose }: AiImportPanelProps) {
                     />
                   </div>
                   <div className="md:col-span-5">
-                    <label className="block text-xs text-зinc-500 mb-1">Заметка</label>
+                    <label className="block text-xs text-zinc-500 mb-1">Подсказка</label>
                     <input
                       value={entry.notes || ''}
                       onChange={(event) => handleEntryChange(entry.id, 'notes', event.target.value)}

@@ -135,7 +135,13 @@ export async function POST(request: NextRequest) {
     })
     
     // Подготовка безопасного пользователя
-    const { passwordHash: _, deletedAt: __, ...safeUser } = result.user
+    const {
+      passwordHash: _passwordHash,
+      deletedAt: _deletedAt,
+      ...safeUser
+    } = result.user
+    void _passwordHash
+    void _deletedAt
     
     // Установка куки с токенами
     const cookieStore = await cookies()
