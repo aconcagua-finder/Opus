@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useAuth } from '@/features/auth'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,7 +21,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const router = useRouter()
+  const { status: sessionStatus } = useSession()
+  const isNextAuthAuthenticated = sessionStatus === 'authenticated'
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -73,13 +77,33 @@ export default function LoginPage() {
     }
   }
 
+  const isCheckingAuth = authLoading || sessionStatus === 'loading'
+
+  useEffect(() => {
+    if (isCheckingAuth) {
+      return
+    }
+
+    if (isAuthenticated || isNextAuthAuthenticated) {
+      router.replace('/dictionary')
+    }
+  }, [isCheckingAuth, isAuthenticated, isNextAuthAuthenticated, router])
+
+  if (isCheckingAuth || isAuthenticated || isNextAuthAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" suppressHydrationWarning>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4" suppressHydrationWarning>
       <div className="w-full max-w-md" suppressHydrationWarning>
         {/* Logo */}
         <div className="mb-8 text-center" suppressHydrationWarning>
           <Link href="/" className="inline-block">
-            <h1 className="text-4xl font-bold gradient-text-cyan">Opus</h1>
+            <h1 className="text-5xl font-bold gradient-text-cyan">Opus</h1>
           </Link>
           <p className="mt-2 text-muted">С возвращением</p>
         </div>

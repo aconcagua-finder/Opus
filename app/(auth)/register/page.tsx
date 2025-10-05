@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useAuth } from '@/features/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useRouter } from 'next/navigation'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -29,7 +30,10 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
-  const { register: registerUser } = useAuth()
+  const router = useRouter()
+  const { status: sessionStatus } = useSession()
+  const isNextAuthAuthenticated = sessionStatus === 'authenticated'
+  const { register: registerUser, isAuthenticated, isLoading: authLoading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState(0)
@@ -128,13 +132,33 @@ export default function RegisterPage() {
     }
   }
 
+  const isCheckingAuth = authLoading || sessionStatus === 'loading'
+
+  useEffect(() => {
+    if (isCheckingAuth) {
+      return
+    }
+
+    if (isAuthenticated || isNextAuthAuthenticated) {
+      router.replace('/dictionary')
+    }
+  }, [isCheckingAuth, isAuthenticated, isNextAuthAuthenticated, router])
+
+  if (isCheckingAuth || isAuthenticated || isNextAuthAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" suppressHydrationWarning>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12" suppressHydrationWarning>
       <div className="w-full max-w-md" suppressHydrationWarning>
         {/* Logo */}
         <div className="mb-6 text-center sm:mb-8" suppressHydrationWarning>
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl sm:text-4xl font-bold gradient-text-cyan">Opus</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold gradient-text-cyan">Opus</h1>
           </Link>
           <p className="mt-2 text-sm text-muted sm:text-base">Создайте аккаунт</p>
         </div>

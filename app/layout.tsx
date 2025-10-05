@@ -13,7 +13,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Opus - Игровое обучение',
+  title: 'Opus - Учиться интересно',
   description: 'Геймифицированная платформа для изучения всего на свете',
 }
 

@@ -105,7 +105,7 @@ export function ProtectedNav() {
       <div className="container mx-auto px-4" suppressHydrationWarning>
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/" className="text-xl font-bold sm:text-2xl gradient-text-cyan">
+            <Link href="/" className="text-2xl font-bold sm:text-3xl gradient-text-cyan">
               Opus
             </Link>
             <button

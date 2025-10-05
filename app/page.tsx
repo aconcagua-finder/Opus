@@ -15,7 +15,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
           <div className="flex items-center justify-between h-16" suppressHydrationWarning>
             <div className="flex items-center" suppressHydrationWarning>
-              <h1 className="text-xl sm:text-2xl font-bold gradient-text-cyan">Opus</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold gradient-text-cyan">Opus</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4" suppressHydrationWarning>
               <ThemeToggle className="hidden sm:flex" />
@@ -32,18 +32,11 @@ export default function HomePage() {
                   </Button>
                 </>
               ) : (
-                <>
-                  <Link href="/login">
-                    <Button className="bg-transparent text-muted transition-colors hover:text-accent text-sm sm:text-base px-3 sm:px-4">
-                      Войти
-                    </Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button className="bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 text-white hover:from-cyan-400 hover:to-blue-400 font-semibold transition-all shadow-accent text-sm sm:text-base px-3 sm:px-4">
-                      Начать
-                    </Button>
-                  </Link>
-                </>
+                <Link href="/register">
+                  <Button className="bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 text-white hover:from-cyan-400 hover:to-blue-400 font-semibold transition-all shadow-accent text-sm sm:text-base px-3 sm:px-4">
+                    Начать
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
@@ -71,11 +64,6 @@ export default function HomePage() {
               <Link href="/register" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-400 hover:to-blue-400 font-semibold text-base sm:text-lg px-6 sm:px-8 py-2.5 sm:py-3 shadow-lg shadow-cyan-500/25 transition-all">
                   Начать бесплатно
-                </Button>
-              </Link>
-              <Link href="/login" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-transparent text-cyan-400 border border-cyan-900/50 hover:bg-cyan-950/30 hover:border-cyan-700/50 text-base sm:text-lg px-6 sm:px-8 py-2.5 sm:py-3 transition-all">
-                  Войти
                 </Button>
               </Link>
             </div>

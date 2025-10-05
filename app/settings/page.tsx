@@ -48,7 +48,7 @@ export default function SettingsPage() {
       <ProtectedNav />
       <main className="relative z-10 container mx-auto px-4 py-6 sm:py-12 max-w-5xl">
         <header className="mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-cyan-300 to-white bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[var(--text-primary)] via-[var(--accent-primary)] to-[var(--text-primary)] bg-clip-text text-transparent mb-2">
             Настройки
           </h1>
           <p className="text-sm text-muted sm:text-base">
