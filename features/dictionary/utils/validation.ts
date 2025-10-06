@@ -54,6 +54,12 @@ export const dictionaryFiltersSchema = z.object({
   listId: z.string().optional()
 })
 
+export const dictionaryPaginationSchema = z.object({
+  page: z.coerce.number().int().min(1).max(1000).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+})
+
 export type CreateDictionaryEntryInput = z.infer<typeof createDictionaryEntrySchema>
 export type UpdateDictionaryEntryInput = z.infer<typeof updateDictionaryEntrySchema>
 export type DictionaryFiltersInput = z.infer<typeof dictionaryFiltersSchema>
+export type DictionaryPaginationInput = z.infer<typeof dictionaryPaginationSchema>

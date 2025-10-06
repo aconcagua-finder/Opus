@@ -73,6 +73,8 @@ docker-compose exec postgres psql -U postgres -d opus_language -c "SELECT 1;"
    docker-compose up postgres -d
    ```
 
+- Dev-диагностика: `/api/test-db` и `/api/test-pg` работают только при `NODE_ENV=development`
+
 ### Google OAuth не работает
 
 **Симптомы:**

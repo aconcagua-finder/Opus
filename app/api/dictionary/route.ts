@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
+import { ZodError } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { createDictionaryEntrySchema, dictionaryFiltersSchema } from '@/features/dictionary'
+import {
+  createDictionaryEntrySchema,
+  dictionaryFiltersSchema,
+  dictionaryPaginationSchema
+} from '@/features/dictionary'
+import { createErrorResponse, formatZodError } from '@/lib/http'
+
+const DEFAULT_PAGE = 1
+const DEFAULT_LIMIT = 50
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +18,11 @@ export async function GET(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Парсим query параметры для фильтрации
@@ -23,6 +36,16 @@ export async function GET(request: NextRequest) {
 
     // Валидация фильтров
     const validatedFilters = dictionaryFiltersSchema.parse(filters)
+
+    const paginationInput = {
+      page: searchParams.get('page') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+    }
+
+    const { page: parsedPage, limit: parsedLimit } = dictionaryPaginationSchema.parse(paginationInput)
+
+    const page = parsedPage ?? DEFAULT_PAGE
+    const limit = parsedLimit ?? DEFAULT_LIMIT
 
     // Построение условий фильтрации
     const where: Prisma.DictionaryEntryWhereInput = {
@@ -74,9 +97,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Пагинация
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
 
     // Получение записей
@@ -102,10 +122,20 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Dictionary GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch dictionary entries' },
-      { status: 500 }
-    )
+    if (error instanceof ZodError) {
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные параметры запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
+    }
+
+    return createErrorResponse({
+      code: 'DICTIONARY_FETCH_FAILED',
+      message: 'Failed to fetch dictionary entries',
+      status: 500,
+    })
   }
 }
 
@@ -115,7 +145,11 @@ export async function POST(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const body = await request.json()
@@ -134,10 +168,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingEntry) {
-      return NextResponse.json(
-        { error: 'Такое слово уже есть в вашем словаре' },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'DICTIONARY_ENTRY_EXISTS',
+        message: 'Такое слово уже есть в вашем словаре',
+        status: 400,
+      })
     }
 
     // Создание новой записи
@@ -156,17 +191,19 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Dictionary POST error:', error)
-    
-    if (error instanceof Error && 'issues' in error) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.message },
-        { status: 400 }
-      )
+    if (error instanceof ZodError) {
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные данные запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create dictionary entry' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_CREATE_FAILED',
+      message: 'Failed to create dictionary entry',
+      status: 500,
+    })
   }
 }

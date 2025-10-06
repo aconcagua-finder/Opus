@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { Language } from '@prisma/client'
+import { createErrorResponse, formatZodError } from '@/lib/http'
 
 const ENTRY_LIMIT = 100
 
@@ -41,7 +42,11 @@ export async function POST(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const json = await request.json()
@@ -111,15 +116,18 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Dictionary import error:', error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Некорректные данные запроса', details: error.flatten() },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные данные запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Не удалось сохранить список слов' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_IMPORT_FAILED',
+      message: 'Не удалось сохранить список слов',
+      status: 500,
+    })
   }
 }

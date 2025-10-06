@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server'
 import { Client } from 'pg'
+import { createErrorResponse } from '@/lib/http'
 
 export async function GET() {
+  if (process.env.NODE_ENV !== 'development') {
+    return createErrorResponse({
+      code: 'NOT_FOUND',
+      message: 'Not Found',
+      status: 404,
+    })
+  }
+
   const urls = [
     'postgresql://postgres:anypass@localhost:5432/opus_language',
     'postgresql://postgres:anypass@127.0.0.1:5432/opus_language',
@@ -37,9 +46,10 @@ export async function GET() {
     }
   }
   
-  return NextResponse.json({ 
-    success: false,
+  return createErrorResponse({
+    code: 'DATABASE_CONNECTION_FAILED',
     message: 'No connection string worked',
-    results 
-  }, { status: 500 })
+    status: 500,
+    details: { results }
+  })
 }

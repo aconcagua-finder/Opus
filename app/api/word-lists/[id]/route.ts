@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { WordListType } from '@prisma/client'
+import { createErrorResponse, formatZodError } from '@/lib/http'
 
 const updateWordListSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -19,7 +20,11 @@ export async function GET(
     const { id } = await params
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Проверяем, является ли это авто-списком
@@ -35,7 +40,11 @@ export async function GET(
       } else if (id === 'auto-28-days') {
         dateFilter = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000)
       } else {
-        return NextResponse.json({ error: 'Invalid auto-list id' }, { status: 400 })
+        return createErrorResponse({
+          code: 'INVALID_AUTO_LIST_ID',
+          message: 'Invalid auto-list id',
+          status: 400,
+        })
       }
 
       const entries = await prisma.dictionaryEntry.findMany({
@@ -79,7 +88,11 @@ export async function GET(
     })
 
     if (!list) {
-      return NextResponse.json({ error: 'List not found' }, { status: 404 })
+      return createErrorResponse({
+        code: 'WORD_LIST_NOT_FOUND',
+        message: 'List not found',
+        status: 404,
+      })
     }
 
     const entries = list.wordListItems.map(item => item.entry)
@@ -96,10 +109,11 @@ export async function GET(
 
   } catch (error) {
     console.error('Word list GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch word list' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'WORD_LIST_FETCH_FAILED',
+      message: 'Failed to fetch word list',
+      status: 500,
+    })
   }
 }
 
@@ -112,15 +126,20 @@ export async function PUT(
     const { id } = await params
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Авто-списки нельзя редактировать
     if (id.startsWith('auto-')) {
-      return NextResponse.json(
-        { error: 'Cannot edit auto-generated lists' },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'AUTO_LIST_LOCKED',
+        message: 'Cannot edit auto-generated lists',
+        status: 400,
+      })
     }
 
     const body = await request.json()
@@ -132,7 +151,11 @@ export async function PUT(
     })
 
     if (!existingList) {
-      return NextResponse.json({ error: 'List not found' }, { status: 404 })
+      return createErrorResponse({
+        code: 'WORD_LIST_NOT_FOUND',
+        message: 'List not found',
+        status: 404,
+      })
     }
 
     // Обновляем список
@@ -155,16 +178,19 @@ export async function PUT(
     console.error('Word list PUT error:', error)
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные данные запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update word list' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'WORD_LIST_UPDATE_FAILED',
+      message: 'Failed to update word list',
+      status: 500,
+    })
   }
 }
 
@@ -177,15 +203,20 @@ export async function DELETE(
     const { id } = await params
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Авто-списки нельзя удалять
     if (id.startsWith('auto-')) {
-      return NextResponse.json(
-        { error: 'Cannot delete auto-generated lists' },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'AUTO_LIST_LOCKED',
+        message: 'Cannot delete auto-generated lists',
+        status: 400,
+      })
     }
 
     // Проверяем существование и ownership
@@ -194,7 +225,11 @@ export async function DELETE(
     })
 
     if (!existingList) {
-      return NextResponse.json({ error: 'List not found' }, { status: 404 })
+      return createErrorResponse({
+        code: 'WORD_LIST_NOT_FOUND',
+        message: 'List not found',
+        status: 404,
+      })
     }
 
     // Удаляем список (wordListItems удалятся каскадно)
@@ -206,9 +241,10 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Word list DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete word list' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'WORD_LIST_DELETE_FAILED',
+      message: 'Failed to delete word list',
+      status: 500,
+    })
   }
 }

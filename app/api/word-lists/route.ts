@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { WordListType } from '@prisma/client'
+import { createErrorResponse, formatZodError } from '@/lib/http'
 
 const createWordListSchema = z.object({
   name: z.string().min(1).max(100),
@@ -79,7 +80,11 @@ export async function GET(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const { searchParams } = new URL(request.url)
@@ -117,10 +122,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Word lists GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch word lists' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'WORD_LIST_FETCH_FAILED',
+      message: 'Failed to fetch word lists',
+      status: 500,
+    })
   }
 }
 
@@ -129,7 +135,11 @@ export async function POST(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const body = await request.json()
@@ -145,10 +155,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingList) {
-      return NextResponse.json(
-        { error: 'Список с таким именем уже существует' },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'WORD_LIST_ALREADY_EXISTS',
+        message: 'Список с таким именем уже существует',
+        status: 400,
+      })
     }
 
     // Создаем новый список
@@ -176,15 +187,18 @@ export async function POST(request: NextRequest) {
     console.error('Word lists POST error:', error)
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
-        { status: 400 }
-      )
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные данные запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create word list' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'WORD_LIST_CREATE_FAILED',
+      message: 'Failed to create word list',
+      status: 500,
+    })
   }
 }

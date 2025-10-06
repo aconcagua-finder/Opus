@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Language } from '@prisma/client'
+import { createErrorResponse } from '@/lib/http'
 
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Вычисляем даты для фильтрации
@@ -81,9 +86,10 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Dictionary stats error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch dictionary stats' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_STATS_FAILED',
+      message: 'Failed to fetch dictionary stats',
+      status: 500,
+    })
   }
 }

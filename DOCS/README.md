@@ -196,6 +196,11 @@ OPENAI_DICTIONARY_MODEL="gpt-4.1-mini" # optional override
 - `GET/POST /api/dictionary` - список и добавление слов
 - `GET/PUT/DELETE /api/dictionary/:id` - операции над конкретной записью
 - `GET /api/dictionary/stats` - агрегированная статистика
+- `GET/POST /api/word-lists` - управление набором списков
+- `GET/PUT/DELETE /api/word-lists/:id` - операции над конкретным списком
+- `POST /api/word-lists/:id/items` - добавление слова в список
+- `DELETE /api/word-lists/:id/items/:entryId` - удаление слова из списка
+- Все ошибки в модуле возвращаются в формате `{ error, code, details? }`
 
 **Функции**:
 - Пагинация, фильтрация по языкам и поиск по тексту

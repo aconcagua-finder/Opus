@@ -174,7 +174,7 @@ export const wordListsAPI: WordListsAPI = {
 
   async removeEntryFromList(listId: string, entryId: string) {
     const response = await fetch(
-      `${API_BASE}/${listId}/items?entryId=${entryId}`,
+      `${API_BASE}/${listId}/items/${encodeURIComponent(entryId)}`,
       {
         method: 'DELETE'
       }

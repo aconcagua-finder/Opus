@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ZodError } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { updateDictionaryEntrySchema } from '@/features/dictionary'
 import type { UpdateDictionaryEntryInput } from '@/features/dictionary'
+import { createErrorResponse, formatZodError } from '@/lib/http'
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +14,11 @@ export async function GET(
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const entry = await prisma.dictionaryEntry.findFirst({
@@ -23,10 +29,11 @@ export async function GET(
     })
 
     if (!entry) {
-      return NextResponse.json(
-        { error: 'Dictionary entry not found' },
-        { status: 404 }
-      )
+      return createErrorResponse({
+        code: 'DICTIONARY_ENTRY_NOT_FOUND',
+        message: 'Dictionary entry not found',
+        status: 404,
+      })
     }
 
     // Увеличиваем счетчик просмотров
@@ -42,10 +49,11 @@ export async function GET(
 
   } catch (error) {
     console.error('Dictionary GET by ID error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch dictionary entry' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_ENTRY_FETCH_FAILED',
+      message: 'Failed to fetch dictionary entry',
+      status: 500,
+    })
   }
 }
 
@@ -58,7 +66,11 @@ export async function PUT(
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     const body = await request.json()
@@ -75,10 +87,11 @@ export async function PUT(
     })
 
     if (!existingEntry) {
-      return NextResponse.json(
-        { error: 'Dictionary entry not found' },
-        { status: 404 }
-      )
+      return createErrorResponse({
+        code: 'DICTIONARY_ENTRY_NOT_FOUND',
+        message: 'Dictionary entry not found',
+        status: 404,
+      })
     }
 
     // Проверка на дубликаты при изменении слова
@@ -98,10 +111,11 @@ export async function PUT(
       })
 
       if (duplicate) {
-        return NextResponse.json(
-          { error: 'Такое слово уже есть в вашем словаре' },
-          { status: 400 }
-        )
+        return createErrorResponse({
+          code: 'DICTIONARY_ENTRY_EXISTS',
+          message: 'Такое слово уже есть в вашем словаре',
+          status: 400,
+        })
       }
     }
 
@@ -120,18 +134,21 @@ export async function PUT(
 
   } catch (error) {
     console.error('Dictionary PUT error:', error)
-    
-    if (error instanceof Error && 'issues' in error) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.message },
-        { status: 400 }
-      )
+
+    if (error instanceof ZodError) {
+      return createErrorResponse({
+        code: 'VALIDATION_ERROR',
+        message: 'Некорректные данные запроса',
+        status: 400,
+        details: formatZodError(error),
+      })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update dictionary entry' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_UPDATE_FAILED',
+      message: 'Failed to update dictionary entry',
+      status: 500,
+    })
   }
 }
 
@@ -144,7 +161,11 @@ export async function DELETE(
     const userId = request.headers.get('x-user-id')
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse({
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+        status: 401,
+      })
     }
 
     // Проверяем, существует ли запись и принадлежит ли она пользователю
@@ -156,10 +177,11 @@ export async function DELETE(
     })
 
     if (!existingEntry) {
-      return NextResponse.json(
-        { error: 'Dictionary entry not found' },
-        { status: 404 }
-      )
+      return createErrorResponse({
+        code: 'DICTIONARY_ENTRY_NOT_FOUND',
+        message: 'Dictionary entry not found',
+        status: 404,
+      })
     }
 
     // Удаление записи
@@ -171,9 +193,10 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Dictionary DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete dictionary entry' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      code: 'DICTIONARY_DELETE_FAILED',
+      message: 'Failed to delete dictionary entry',
+      status: 500,
+    })
   }
 }

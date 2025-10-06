@@ -29,13 +29,15 @@ export { AVAILABLE_LANGUAGES, getLanguageLabel, getLanguageFlag, getLanguageOpti
 export {
   createDictionaryEntrySchema,
   updateDictionaryEntrySchema,
-  dictionaryFiltersSchema
+  dictionaryFiltersSchema,
+  dictionaryPaginationSchema
 } from './utils/validation'
 
 export type {
   CreateDictionaryEntryInput,
   UpdateDictionaryEntryInput,
-  DictionaryFiltersInput
+  DictionaryFiltersInput,
+  DictionaryPaginationInput
 } from './utils/validation'
 
 // Hooks
