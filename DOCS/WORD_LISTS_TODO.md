@@ -18,6 +18,8 @@
    - `POST /api/word-lists/:id/items` — добавление слов
    - `DELETE /api/word-lists/:id/items/:entryId` — удаление слов
    - Ошибки API стандартизированы: `{ error, code, details? }`
+   - Документация: swagger по адресу `/docs/api`, JSON — `/api/openapi`
+   - При изменении эндпоинтов обязательно обновляй `lib/openapi.ts`
    - Авто-списки не создаются в БД, формируются на лету (последние 7/14/28 дней)
 3. **Стор и хуки**
    - `useWordListsStore` — Zustand store с кешем и автосчётчиками

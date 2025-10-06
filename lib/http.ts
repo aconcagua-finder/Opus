@@ -43,7 +43,9 @@ export type ZodIssueDetail = {
 export function formatZodError(error: ZodError): ZodIssueDetail[] {
   return error.issues.map((issue) => ({
     message: issue.message,
-    path: issue.path,
+    path: issue.path
+      .map((segment) => (typeof segment === 'symbol' ? segment.toString() : segment))
+      .filter((segment): segment is string | number => typeof segment === 'string' || typeof segment === 'number'),
     code: issue.code,
   }))
 }

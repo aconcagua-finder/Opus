@@ -155,25 +155,30 @@ export const useDictionaryAiSettingsStore = create<DictionaryAiSettingsState>()(
       version: 2,
       storage: createJSONStorage(() => localStorage),
       migrate: (state, version) => {
-        if (!state) {
+        if (!state || typeof state !== 'object') {
           return state
         }
 
-        if (version < 2 && 'promptTemplates' in state && state.promptTemplates) {
+        const hasPromptTemplates =
+          Object.prototype.hasOwnProperty.call(state, 'promptTemplates') &&
+          (state as { promptTemplates?: unknown }).promptTemplates
+
+        if (version < 2 && hasPromptTemplates) {
+          const current = (state as { promptTemplates: Partial<DictionaryAiPromptTemplates> | undefined }).promptTemplates ?? {}
           const base = DEFAULT_DICTIONARY_AI_CLIENT_CONFIGURATION.promptTemplates
           const nextTemplates: DictionaryAiPromptTemplates = {
-            systemTemplate: isLegacyTemplate(state.promptTemplates.systemTemplate, LEGACY_SYSTEM_PROMPT_TEMPLATE_EN)
+            systemTemplate: isLegacyTemplate(current.systemTemplate, LEGACY_SYSTEM_PROMPT_TEMPLATE_EN)
               ? base.systemTemplate
-              : state.promptTemplates.systemTemplate ?? base.systemTemplate,
-            singleWordFocus: isLegacyTemplate(state.promptTemplates.singleWordFocus, LEGACY_SINGLE_WORDS_FOCUS_EN)
+              : current.systemTemplate ?? base.systemTemplate,
+            singleWordFocus: isLegacyTemplate(current.singleWordFocus, LEGACY_SINGLE_WORDS_FOCUS_EN)
               ? base.singleWordFocus
-              : state.promptTemplates.singleWordFocus ?? base.singleWordFocus,
-            includePhrasesFocus: isLegacyTemplate(state.promptTemplates.includePhrasesFocus, LEGACY_INCLUDE_PHRASES_FOCUS_EN)
+              : current.singleWordFocus ?? base.singleWordFocus,
+            includePhrasesFocus: isLegacyTemplate(current.includePhrasesFocus, LEGACY_INCLUDE_PHRASES_FOCUS_EN)
               ? base.includePhrasesFocus
-              : state.promptTemplates.includePhrasesFocus ?? base.includePhrasesFocus,
-            notesRule: isLegacyTemplate(state.promptTemplates.notesRule, LEGACY_NOTES_RULE_EN)
+              : current.includePhrasesFocus ?? base.includePhrasesFocus,
+            notesRule: isLegacyTemplate(current.notesRule, LEGACY_NOTES_RULE_EN)
               ? base.notesRule
-              : state.promptTemplates.notesRule ?? base.notesRule,
+              : current.notesRule ?? base.notesRule,
           }
 
           return {
